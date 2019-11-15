@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "917493150628",
+    "firebase_url": "https://smarttrainercontrol.firebaseio.com",
+    "project_id": "smarttrainercontrol",
+    "storage_bucket": "smarttrainercontrol.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:917493150628:android:851459c09705c43e8d8731",
+        "android_client_info": {
+          "package_name": "com.example.mysmarttrainercontrol"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "917493150628-cbujmr5b0eqh58gbjtih5374ioeca90a.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDp-_lBGjwEPAdsIBdRQhnln9yr3uHVIH4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "917493150628-cbujmr5b0eqh58gbjtih5374ioeca90a.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
