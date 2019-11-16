@@ -7,16 +7,14 @@ Copyright (c) Dynastream Innovations Inc. 2014
 All rights reserved.
  */
 
-package com.example.mysmarttrainercontrol.multidevicesearch;
+package com.example.mytrainercontrol.multidevicesearch;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
 
 //import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
-import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,9 +38,9 @@ import com.dsi.ant.antplus.pluginsampler.weightscale.Activity_WeightScaleSampler
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
-import com.example.mysmarttrainercontrol.Fragment_ManualPowerControl;
-import com.example.mysmarttrainercontrol.R;
-//import com.example.mysmarttrainercontrol.Activity_BikePowerSampler;
+import com.example.mytrainercontrol.Fragment_ManualPowerControl;
+import com.example.mytrainercontrol.R;
+//import com.example.mytrainercontrol.Activity_BikePowerSampler;
 import com.dsi.ant.plugins.antplus.pcc.MultiDeviceSearch;
 import com.dsi.ant.plugins.antplus.pcc.MultiDeviceSearch.RssiSupport;
 import com.dsi.ant.plugins.antplus.pcc.defines.DeviceType;

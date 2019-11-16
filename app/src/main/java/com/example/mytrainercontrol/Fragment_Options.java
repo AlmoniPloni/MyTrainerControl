@@ -1,4 +1,4 @@
-package com.example.mysmarttrainercontrol;
+package com.example.mytrainercontrol;
 
 import android.os.Bundle;
 //import android.support.v4.app.Fragment;
@@ -11,9 +11,8 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.mysmarttrainercontrol.fitnessequipment.Fragment_FitnessEquipmentSampler;
-import com.example.mysmarttrainercontrol.fitnessequipment.TrainerController;
-import com.example.mysmarttrainercontrol.multidevicesearch.Fragment_MultiDeviceSearchSampler;
+import com.example.mytrainercontrol.fitnessequipment.Fragment_FitnessEquipmentSampler;
+import com.example.mytrainercontrol.multidevicesearch.Fragment_MultiDeviceSearchSampler;
 
 public class Fragment_Options extends Fragment implements View.OnClickListener {
     View rootView;

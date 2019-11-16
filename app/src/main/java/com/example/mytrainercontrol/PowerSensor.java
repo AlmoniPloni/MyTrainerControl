@@ -7,7 +7,7 @@ Copyright (c) Dynastream Innovations Inc. 2013
 All rights reserved.
 */
 
-package com.example.mysmarttrainercontrol;
+package com.example.mytrainercontrol;
 
 import java.math.BigDecimal;
 import java.util.EnumSet;
@@ -19,21 +19,15 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.mysmarttrainercontrol.multidevicesearch.Fragment_MultiDeviceSearchSampler;
 import com.dsi.ant.plugins.antplus.pcc.AntPlusBikePowerPcc;
 import com.dsi.ant.plugins.antplus.pcc.AntPlusBikePowerPcc.AutoZeroStatus;
 import com.dsi.ant.plugins.antplus.pcc.AntPlusBikePowerPcc.CalculatedWheelDistanceReceiver;
 import com.dsi.ant.plugins.antplus.pcc.AntPlusBikePowerPcc.CalculatedWheelSpeedReceiver;
 import com.dsi.ant.plugins.antplus.pcc.AntPlusBikePowerPcc.CalibrationMessage;
-import com.dsi.ant.plugins.antplus.pcc.AntPlusBikePowerPcc.CrankLengthSetting;
 import com.dsi.ant.plugins.antplus.pcc.AntPlusBikePowerPcc.CrankParameters;
 import com.dsi.ant.plugins.antplus.pcc.AntPlusBikePowerPcc.DataSource;
 import com.dsi.ant.plugins.antplus.pcc.AntPlusBikePowerPcc.IAutoZeroStatusReceiver;
@@ -61,7 +55,6 @@ import com.dsi.ant.plugins.antplus.pccbase.AntPlusCommonPcc.IBatteryStatusReceiv
 import com.dsi.ant.plugins.antplus.pccbase.AntPlusCommonPcc.IManufacturerIdentificationReceiver;
 import com.dsi.ant.plugins.antplus.pccbase.AntPlusCommonPcc.IProductInformationReceiver;
 import com.dsi.ant.plugins.antplus.pccbase.AntPlusCommonPcc.IRequestFinishedReceiver;
-import com.dsi.ant.plugins.antplus.pccbase.MultiDeviceSearch.MultiDeviceSearchResult;
 import com.dsi.ant.plugins.antplus.pccbase.PccReleaseHandle;
 
 /**

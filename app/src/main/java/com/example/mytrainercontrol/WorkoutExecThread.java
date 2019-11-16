@@ -1,4 +1,4 @@
-package com.example.mysmarttrainercontrol;
+package com.example.mytrainercontrol;
 
 import android.app.Activity;
 import android.content.Context;
@@ -6,14 +6,12 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.util.Pair;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.mysmarttrainercontrol.fitnessequipment.TrainerController;
+import com.example.mytrainercontrol.fitnessequipment.TrainerController;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import static java.lang.Math.min;
 
@@ -72,7 +70,7 @@ public class WorkoutExecThread extends Thread {
                     if (shouldPause == true) {
                         try {
                             Log.d(TAG, "Pausing workout at Segment #" + i + " current power = " + lastTargetPower + " W left time " + segmentTimeLeft + " sec. to the end of current segment");
-                            setTargetPower(100, false);
+                            setTargetPower(i, 100, false);
                             synchronized (this) {
                                 wait();
                             }
@@ -87,13 +85,13 @@ public class WorkoutExecThread extends Thread {
                     } else {
                         if (skip_segment == true) {
                             Log.d(TAG, "Skipping segment");
-                            showToast("Skipping current segment!");
+                            //showToast("Skipping current segment!");
                             break;
                         }
                         else {
                             Log.d(TAG, "Stopping workout");
                             showToast("Workout Stopped !");
-                            setTargetPower(100, true);
+                            setTargetPower(i, 100, true);
                             return;
                         }
                     }
@@ -108,7 +106,8 @@ public class WorkoutExecThread extends Thread {
         }
 
         showToast("Workout DONE!");
-        setTargetPower(100, true);
+        setTargetPower(0, 100, true);
+        mFragment.setWorkoutInProgress(false);
         Thread.currentThread().interrupt();
     }
 
@@ -147,7 +146,7 @@ public class WorkoutExecThread extends Thread {
                     }
                 };
                 cTimer.start();
-                setTargetPower(targetPower, true);
+                setTargetPower(0, targetPower, true);
 
             }
         });
@@ -188,7 +187,7 @@ public class WorkoutExecThread extends Thread {
         });
     }
 
-    private void setTargetPower(final int power, boolean setLastTargetPower){
+    private void setTargetPower(final int segment, final int power, boolean setLastTargetPower){
         mTrainerController.setTargetPower(new BigDecimal(power));
         mActivity.runOnUiThread(new Runnable() {
             @Override
@@ -196,7 +195,7 @@ public class WorkoutExecThread extends Thread {
                 mTargetPower.setText("" + power);
             }
         });
-        mFragment.setLastSegment(power);
+        mFragment.setLastSegment(segment);
         if (setLastTargetPower == true)
             lastTargetPower = power;
     }

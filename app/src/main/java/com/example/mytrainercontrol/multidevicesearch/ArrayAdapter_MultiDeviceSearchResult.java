@@ -7,7 +7,7 @@ Copyright (c) Dynastream Innovations Inc. 2014
 All rights reserved.
  */
 
-package com.example.mysmarttrainercontrol.multidevicesearch;
+package com.example.mytrainercontrol.multidevicesearch;
 
 import java.util.ArrayList;
 
@@ -19,8 +19,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.example.mysmarttrainercontrol.R;
-import com.example.mysmarttrainercontrol.multidevicesearch.Fragment_MultiDeviceSearchSampler.MultiDeviceSearchResultWithRSSI;
+import com.example.mytrainercontrol.R;
+import com.example.mytrainercontrol.multidevicesearch.Fragment_MultiDeviceSearchSampler.MultiDeviceSearchResultWithRSSI;
 
 /**
  * Adapter that displays MultiDeviceSearchResultWithRSSI in a List View with

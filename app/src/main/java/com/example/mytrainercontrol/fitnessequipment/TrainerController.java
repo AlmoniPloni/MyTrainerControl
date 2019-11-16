@@ -1,4 +1,4 @@
-package com.example.mysmarttrainercontrol.fitnessequipment;
+package com.example.mytrainercontrol.fitnessequipment;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -41,9 +41,16 @@ public class TrainerController {
     public TrainerController(Activity activity, Context context){
         mContext = context;
         mActivity = activity;
-
-
     }
+
+    public PccReleaseHandle<AntPlusFitnessEquipmentPcc> getReleaseHandle() {
+        return releaseHandle;
+    }
+
+    public AntPlusFitnessEquipmentPcc getFePcc() {
+        return fePcc;
+    }
+
 
     final AntPlusCommonPcc.IRequestFinishedReceiver requestFinishedReceiver = new AntPlusCommonPcc.IRequestFinishedReceiver()
     {

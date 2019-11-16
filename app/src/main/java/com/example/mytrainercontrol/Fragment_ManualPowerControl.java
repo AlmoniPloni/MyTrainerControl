@@ -1,4 +1,4 @@
-package com.example.mysmarttrainercontrol;
+package com.example.mytrainercontrol;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -9,22 +9,18 @@ import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import android.preference.PreferenceManager;
 import android.util.Log;
-import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.mysmarttrainercontrol.fitnessequipment.TrainerController;
+import com.example.mytrainercontrol.fitnessequipment.TrainerController;
 import com.google.gson.Gson;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import static java.lang.Thread.sleep;
 
@@ -61,7 +57,7 @@ public class Fragment_ManualPowerControl extends Fragment {
     WorkoutExecThread workoutExecutionThread;
     boolean workoutPaused;
     boolean workoutInProgress;
-    int lastTargetPower;
+    //int lastTargetPower;
     int segmentTimeLeft;
     int lastSegment;
 
@@ -165,20 +161,24 @@ public class Fragment_ManualPowerControl extends Fragment {
         Log.d(TAG, "In onSaveInstanceState");
         super.onSaveInstanceState(savedInstanceState);
 
-        /*SharedPreferences sp = getActivity().getSharedPreferences("my_pref", Activity.MODE_PRIVATE);
+        Log.d(TAG, "Saving state to shared preferences");
+
+        SharedPreferences sp = getActivity().getSharedPreferences("my_prefs", Activity.MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
         editor.putBoolean(WORKOUT_IN_PROGRESS, workoutInProgress);
+        Log.d(TAG, "Saving workoutInProgress " + workoutInProgress);
+
         editor.putBoolean(WORKOUT_PAUSED, workoutPaused);
 
         Gson gson = new Gson();
         String jsonWorkout = gson.toJson(workout);
         editor.putString(WORKOUT, jsonWorkout);
 
-        editor.putInt(LAST_TARGET_POWER, lastTargetPower);
+        //editor.putInt(LAST_TARGET_POWER, lastTargetPower);
         editor.putInt(SEGMENT_TIME_LEFT, segmentTimeLeft);
         editor.putInt(LAST_SEGMENT, lastSegment);
         editor.commit();
-        */
+
     }
 
     @Override
@@ -186,10 +186,14 @@ public class Fragment_ManualPowerControl extends Fragment {
         Log.d(TAG, "In onActivityCreated");
         super.onActivityCreated(savedInstanceState);
 
-        /*Log.d(TAG, "Restoring previous state from shared preferences");
+        Log.d(TAG, "Restoring previous state from shared preferences");
         SharedPreferences sp = getActivity().getSharedPreferences("my_prefs", Activity.MODE_PRIVATE);
         workoutInProgress = sp.getBoolean(WORKOUT_IN_PROGRESS, false);
+        Log.d(TAG, "Restored workoutInProgress: " + workoutInProgress);
+
         workoutPaused = sp.getBoolean(WORKOUT_PAUSED, false);
+        Log.d(TAG, "Restored workoutPaused: " + workoutPaused);
+
 
         String jsonWorkout= sp.getString("WORKOUT", "");
         if(jsonWorkout.isEmpty() == false) {
@@ -197,17 +201,24 @@ public class Fragment_ManualPowerControl extends Fragment {
             workout = gson.fromJson(jsonWorkout, Workout.class);
         }
 
-        lastTargetPower =  sp.getInt(LAST_TARGET_POWER, 100);
+        //lastTargetPower =  sp.getInt(LAST_TARGET_POWER, 100);
         segmentTimeLeft = sp.getInt(SEGMENT_TIME_LEFT, Integer.MAX_VALUE);
-        lastSegment = sp.getInt(LAST_SEGMENT, 10000);
-        */
+        Log.d(TAG, "Restored segmentTimeLeft: " + segmentTimeLeft);
+
+        lastSegment = sp.getInt(LAST_SEGMENT, 0);
+        Log.d(TAG, "Restored lastSegment: " + lastSegment);
+
 
         //Toast.makeText(getContext(), "Starting workout execution thread", Toast.LENGTH_SHORT).show();
         //Log.d(TAG, "Restarting Workout Execution Thread");
 
-        //workoutExecutionThread = new WorkoutExecThread(this);
-        //workoutExecutionThread.start();
-        //workoutInProgress = true;
+        if (workoutInProgress == true) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+            builder.setMessage("Would you like to resume last unfinished workout ?").setPositiveButton("Yes", resumeDialogClickListener)
+                    .setNegativeButton("No", resumeDialogClickListener)
+                    .show();
+        }
+
 
         if (savedInstanceState != null) {
             Log.d(TAG, "Restoring previous state");
@@ -228,7 +239,7 @@ public class Fragment_ManualPowerControl extends Fragment {
         }
     }
 
-    DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+    DialogInterface.OnClickListener stopDialogClickListener = new DialogInterface.OnClickListener() {
         @Override
         public void onClick(DialogInterface dialog, int which) {
             switch (which){
@@ -246,6 +257,32 @@ public class Fragment_ManualPowerControl extends Fragment {
                 case DialogInterface.BUTTON_NEGATIVE:
                     //No button clicked
                     Log.d(TAG, "No clicked, Don't Stop Workout");
+                    break;
+            }
+        }
+    };
+
+    DialogInterface.OnClickListener resumeDialogClickListener = new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            switch (which){
+                case DialogInterface.BUTTON_POSITIVE:
+                    //Yes button clicked
+                    Toast.makeText(getContext(), "Resuming workout, where it stopped last time.", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "Resuming Workout where it stopped last time, now !");
+                    workoutExecutionThread = new WorkoutExecThread(Fragment_ManualPowerControl.this);
+                    workoutExecutionThread.start();
+                    workoutInProgress = true;
+                    break;
+
+                case DialogInterface.BUTTON_NEGATIVE:
+                    //No button clicked
+                    Log.d(TAG, "No clicked, Don't resume anything");
+                    workoutPaused = false;
+                    workoutInProgress = false;
+                    lastSegment = 0;
+                    segmentTimeLeft = Integer.MAX_VALUE;
+                    workout = null;
                     break;
             }
         }
@@ -285,9 +322,15 @@ public class Fragment_ManualPowerControl extends Fragment {
         if (workout == null) {
             Toast.makeText(getContext(), "Load Workout First", Toast.LENGTH_SHORT).show();
         }
+
+        else if (trainerController.getFePcc() == null || trainerController.getReleaseHandle() == null) {
+            Toast.makeText(getContext(), "No connected trainer, do search again", Toast.LENGTH_SHORT).show();
+        }
+
         else if (workoutExecutionThread != null && workoutExecutionThread.isAlive() == true) {
             Toast.makeText(getContext(), "Workout is executing, stop it to start a new one", Toast.LENGTH_SHORT).show();
         }
+
         else {
             Toast.makeText(getContext(), "Starting workout execution thread", Toast.LENGTH_SHORT).show();
             workoutExecutionThread = new WorkoutExecThread(this);
@@ -300,8 +343,8 @@ public class Fragment_ManualPowerControl extends Fragment {
         if (workoutExecutionThread != null && workoutExecutionThread.isAlive() == true) {
 
             AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-            builder.setMessage("Are you sure ?").setPositiveButton("Yes", dialogClickListener)
-                    .setNegativeButton("No", dialogClickListener)
+            builder.setMessage("Are you sure ?").setPositiveButton("Yes", stopDialogClickListener)
+                    .setNegativeButton("No", stopDialogClickListener)
                     .show();
 
 
@@ -366,9 +409,9 @@ public class Fragment_ManualPowerControl extends Fragment {
         return workoutInProgress;
     }
 
-    public void setLastTargetPower(int power) {
+    /*public void setLastTargetPower(int power) {
         lastTargetPower = power;
-    }
+    }*/
 
     public void setSegmentTimeLeft(int timeLeft) {
         segmentTimeLeft = timeLeft;
@@ -376,5 +419,9 @@ public class Fragment_ManualPowerControl extends Fragment {
 
     public void setLastSegment(int segment) {
         lastSegment = segment;
+    }
+
+    public void setWorkoutInProgress(boolean workoutInProgress) {
+        this.workoutInProgress = workoutInProgress;
     }
 }

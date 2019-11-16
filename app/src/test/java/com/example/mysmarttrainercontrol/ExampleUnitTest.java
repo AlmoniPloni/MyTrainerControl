@@ -1,4 +1,4 @@
-package com.example.mysmarttrainercontrol;
+package com.example.mytrainercontrol;
 
 import org.junit.Test;
 

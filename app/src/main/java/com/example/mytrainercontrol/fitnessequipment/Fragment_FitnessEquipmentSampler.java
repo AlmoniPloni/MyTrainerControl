@@ -7,7 +7,7 @@ Copyright (c) Dynastream Innovations Inc. 2014
 All rights reserved.
  */
 
-package com.example.mysmarttrainercontrol.fitnessequipment;
+package com.example.mytrainercontrol.fitnessequipment;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -16,7 +16,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,8 +25,8 @@ import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
-import com.example.mysmarttrainercontrol.R;
-import com.example.mysmarttrainercontrol.multidevicesearch.Fragment_MultiDeviceSearchSampler;
+import com.example.mytrainercontrol.R;
+import com.example.mytrainercontrol.multidevicesearch.Fragment_MultiDeviceSearchSampler;
 import com.dsi.ant.plugins.antplus.common.FitFileCommon.FitFile;
 import com.dsi.ant.plugins.antplus.pcc.AntPlusFitnessEquipmentPcc;
 import com.dsi.ant.plugins.antplus.pcc.AntPlusFitnessEquipmentPcc.CalculatedTrainerDistanceReceiver;
@@ -80,9 +79,6 @@ import com.dsi.ant.plugins.antplus.pccbase.AntPlusCommonPcc.IRequestFinishedRece
 import com.dsi.ant.plugins.antplus.pccbase.MultiDeviceSearch.MultiDeviceSearchResult;
 import com.dsi.ant.plugins.antplus.pccbase.PccReleaseHandle;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.EnumSet;
 

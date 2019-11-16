@@ -1,17 +1,13 @@
-package com.example.mysmarttrainercontrol;
+package com.example.mytrainercontrol;
 
 //import android.support.v4.app.FragmentTransaction;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
 //import android.support.v7.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.view.WindowManager;
-import android.widget.TextView;
-import android.widget.Toast;
+        import android.view.WindowManager;
+        import android.widget.Toast;
 
 import com.google.firebase.analytics.FirebaseAnalytics;
 

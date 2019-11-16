@@ -1,13 +1,12 @@
-package com.example.mysmarttrainercontrol;
+package com.example.mytrainercontrol;
 
 import android.app.Activity;
 import android.content.Context;
 import android.util.Log;
 import android.util.Pair;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.example.mysmarttrainercontrol.fitnessequipment.TrainerController;
+import com.example.mytrainercontrol.fitnessequipment.TrainerController;
 
 import java.math.BigDecimal;
 import java.util.List;

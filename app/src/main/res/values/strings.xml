@@ -7,7 +7,7 @@ Copyright (c) Dynastream Innovations Inc. 2014
 All rights reserved.
 -->
 <resources>
-    <string name="app_name">MySmartTrainerControl</string>
+    <string name="app_name">MyTrainerControl</string>
     <!--<string name="app_name">ANT+ Plugin Sampler</string>-->
     <string name="menu_reset">Reset Connection</string>
     <string name="no_activities_available">No Activities Available</string>
