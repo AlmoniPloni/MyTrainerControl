@@ -1,69 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/fragment_power_control"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/fragment_power_control">
+    android:background="@android:color/black">
+
+    <TextView
+        android:id="@+id/hr_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="27dp"
+        android:layout_marginRight="27dp"
+        android:text="Heart Rate"
+        android:textColor="@android:color/holo_red_light"
+        app:layout_constraintBottom_toTopOf="@+id/hear_rate"
+        app:layout_constraintEnd_toStartOf="@+id/power_title" />
+
+    <TextView
+        android:id="@+id/hear_rate"
+        android:layout_width="70dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="32dp"
+        android:gravity="center"
+        android:text="999"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="36sp"
+        app:layout_constraintStart_toEndOf="@+id/speed"
+        app:layout_constraintTop_toBottomOf="@+id/segment_timer" />
+
+    <TextView
+        android:id="@+id/speed"
+        android:layout_width="80dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="32dp"
+        android:gravity="center"
+        android:text="99.9"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="36sp"
+        app:layout_constraintStart_toEndOf="@+id/cadence"
+        app:layout_constraintTop_toBottomOf="@+id/segment_description" />
+
+    <TextView
+        android:id="@+id/cadence"
+        android:layout_width="70dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="32dp"
+        android:gravity="center"
+        android:text="999"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="36sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/segment_description" />
 
     <TextView
         android:id="@+id/actual_power"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="56dp"
-        android:layout_marginLeft="56dp"
-        android:layout_marginTop="148dp"
-        android:text="-1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_width="70dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="32dp"
+        android:gravity="center"
+        android:text="999"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="36sp"
+        app:layout_constraintStart_toEndOf="@+id/hear_rate"
+        app:layout_constraintTop_toBottomOf="@+id/target_power" />
 
     <TextView
         android:id="@+id/target_power"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="120dp"
-        android:layout_marginLeft="120dp"
-        android:layout_marginTop="148dp"
+        android:layout_width="70dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
         android:text="100"
-        app:layout_constraintStart_toStartOf="@+id/actual_power"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:textColor="@android:color/background_light"
+        android:textSize="36sp"
+        app:layout_constraintStart_toEndOf="@+id/segment_timer"
+        app:layout_constraintTop_toBottomOf="@+id/next_segment_power" />
 
     <Button
         android:id="@+id/power_increase"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="84dp"
-        android:layout_marginLeft="84dp"
-        android:layout_marginTop="64dp"
         android:text="+10"
-        app:layout_constraintStart_toStartOf="@+id/target_power"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="@+id/power_chart"
+        app:layout_constraintTop_toTopOf="@+id/power_chart" />
 
     <Button
         android:id="@+id/power_decrease"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="84dp"
-        android:layout_marginLeft="84dp"
-        android:layout_marginTop="128dp"
         android:text="-10"
-        app:layout_constraintStart_toStartOf="@+id/target_power"
-        app:layout_constraintTop_toTopOf="@+id/power_increase" />
-
-    <Button
-        android:id="@+id/load_workout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="140dp"
-        android:layout_marginLeft="140dp"
-        android:layout_marginEnd="140dp"
-        android:layout_marginRight="140dp"
-        android:layout_marginBottom="32dp"
-        android:text="Load Workout"
-        app:layout_constraintBottom_toTopOf="@+id/pause_workout"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toEndOf="@+id/power_chart"
+        app:layout_constraintBottom_toBottomOf="@+id/power_chart" />
 
     <Button
         android:id="@+id/start_workout"
@@ -89,14 +128,17 @@
 
     <TextView
         android:id="@+id/segment_timer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="159dp"
-        android:layout_marginLeft="159dp"
-        android:layout_marginTop="97dp"
+        android:layout_width="100dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
         android:text="00:00"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:textColor="@android:color/background_light"
+        android:textSize="36sp"
+        app:layout_constraintStart_toEndOf="@+id/segment_description"
+        app:layout_constraintTop_toBottomOf="@+id/next_segment_time" />
 
     <Button
         android:id="@+id/pause_workout"
@@ -119,5 +161,164 @@
         android:text="Next"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/pause_workout" />
+
+    <TextView
+        android:id="@+id/segment_description"
+        android:layout_width="160dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="Easy Spin"
+        android:textColor="@android:color/background_light"
+        android:textSize="36sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/next_segment_description" />
+
+    <TextView
+        android:id="@+id/next_segment_description"
+        android:layout_width="160dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="Easy Spin"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="36sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/workout_timer" />
+
+    <TextView
+        android:id="@+id/next_segment_time"
+        android:layout_width="100dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="00:00"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="36sp"
+        app:layout_constraintStart_toEndOf="@+id/next_segment_description"
+        app:layout_constraintTop_toBottomOf="@+id/workout_timer" />
+
+    <TextView
+        android:id="@+id/next_segment_power"
+        android:layout_width="70dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:text="100"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="36sp"
+        app:layout_constraintStart_toEndOf="@+id/next_segment_time"
+        app:layout_constraintTop_toBottomOf="@+id/total_distance" />
+
+    <TextView
+        android:id="@+id/power_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="none"
+        android:text="Power"
+        android:textColor="@android:color/holo_red_light"
+        app:layout_constraintBottom_toTopOf="@+id/actual_power"
+        app:layout_constraintEnd_toEndOf="@+id/actual_power"
+        app:layout_constraintStart_toStartOf="@+id/actual_power" />
+
+    <TextView
+        android:id="@+id/cadence_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="none"
+        android:text="Cadence"
+        android:textColor="@android:color/holo_red_light"
+        app:layout_constraintBottom_toTopOf="@+id/cadence"
+        app:layout_constraintEnd_toEndOf="@+id/cadence"
+        app:layout_constraintStart_toStartOf="@+id/cadence" />
+
+    <TextView
+        android:id="@+id/speed_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="none"
+        android:text="Speed"
+        android:textColor="@android:color/holo_red_light"
+        app:layout_constraintBottom_toTopOf="@+id/speed"
+        app:layout_constraintEnd_toEndOf="@+id/speed"
+        app:layout_constraintStart_toStartOf="@+id/speed" />
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/power_chart"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:layout_marginTop="40dp"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/hear_rate" />
+
+    <TextView
+        android:id="@+id/open_workout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="none"
+        android:text="Tap Here to Load a Workout"
+        android:textColor="@android:color/holo_orange_light"
+        app:layout_constraintBottom_toTopOf="@+id/power_chart"
+        app:layout_constraintEnd_toStartOf="@+id/power_chart"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/power_chart"
+        app:layout_constraintTop_toBottomOf="@+id/power_chart" />
+
+    <TextView
+        android:id="@+id/workout_timer"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_marginStart="48dp"
+        android:layout_marginLeft="48dp"
+        android:layout_marginTop="32dp"
+        android:text="00:00:00"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="36sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/total_distance"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="48dp"
+        android:layout_marginRight="48dp"
+        android:text="00.00"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="36sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/distance_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="none"
+        android:text="Distance"
+        android:textColor="@android:color/holo_red_light"
+        app:layout_constraintBottom_toTopOf="@+id/total_distance"
+        app:layout_constraintEnd_toEndOf="@+id/total_distance"
+        app:layout_constraintStart_toStartOf="@+id/total_distance" />
+
+    <TextView
+        android:id="@+id/time_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="none"
+        android:text="Time"
+        android:textColor="@android:color/holo_red_light"
+        app:layout_constraintBottom_toTopOf="@+id/workout_timer"
+        app:layout_constraintEnd_toEndOf="@+id/workout_timer"
+        app:layout_constraintStart_toStartOf="@+id/workout_timer" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

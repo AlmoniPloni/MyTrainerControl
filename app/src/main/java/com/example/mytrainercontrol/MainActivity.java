@@ -4,6 +4,7 @@ package com.example.mytrainercontrol;
 //import android.support.v7.app.AppCompatActivity;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
         import android.view.WindowManager;
@@ -56,4 +57,27 @@ public class MainActivity extends AppCompatActivity  {
         }
         super.onBackPressed();
     }
+
+    /*@Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        // TODO Auto-generated method stub
+
+        switch(requestCode){
+
+            case 333:
+
+                if(resultCode==RESULT_OK){
+
+                    String PathHolder = data.getData().getPath();
+                    Log.d(TAG, PathHolder + "was selected");
+
+                    Toast.makeText(MainActivity.this, PathHolder , Toast.LENGTH_LONG).show();
+
+                }
+                break;
+
+        }
+    }*/
+
 }
+

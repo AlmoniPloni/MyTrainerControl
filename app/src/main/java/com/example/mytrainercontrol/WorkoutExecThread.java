@@ -24,15 +24,21 @@ public class WorkoutExecThread extends Thread {
     Context mContext;
     Activity mActivity;
     TrainerController mTrainerController;
-    TextView mTargetPower;
+    //TextView mTargetPower;
+    //TextView mSegmentDescription;
     CountDownTimer cTimer;
-    TextView mSegmentTimer;
+    //TextView mSegmentTimer;
+    //TextView mNextSegmentTimer;
     int segmentTimeLeft;
     int lastTargetPower;
     boolean shouldPause;
     boolean segmentCompleted;
     boolean skip_segment;
     int startSegment;
+    String segmentDescription;
+    String nextSegmentDescription;
+    int nextSegmentStart;
+
 
 
     public WorkoutExecThread(Fragment_ManualPowerControl fragmentFEC){
@@ -42,11 +48,15 @@ public class WorkoutExecThread extends Thread {
         mContext = fragmentFEC.getContext();
         mWorkout = fragmentFEC.workout;
         mTrainerController = fragmentFEC.trainerController;
-        mTargetPower = fragmentFEC.targetPower;
-        mSegmentTimer = fragmentFEC.segmentTimer;
+        //mTargetPower = fragmentFEC.targetPower;
+        //mSegmentDescription = fragmentFEC.segmentDescription;
+
+        //mSegmentTimer = fragmentFEC.segmentTimer;
+        //mNextSegmentTimer = fragmentFEC.nextSegmentTimer;
         shouldPause = false;
         startSegment = fragmentFEC.lastSegment;
         segmentTimeLeft = fragmentFEC.segmentTimeLeft;
+        nextSegmentStart = 0;
 
     }
 
@@ -54,64 +64,76 @@ public class WorkoutExecThread extends Thread {
         workout_loop: for (int i = startSegment; i < mWorkout.getSize(); i++) {
             mFragment.setLastSegment(i);
             lastTargetPower = mWorkout.getPower(i);
-            segmentTimeLeft =  min(segmentTimeLeft, mWorkout.getDuration(i));
+            segmentTimeLeft =  min(segmentTimeLeft, mWorkout.getDuration(i)+1);
+
+            // Set moving ling to start from the beginning of segment
+            final int ind = i;
+            mActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mFragment.setLine(nextSegmentStart);
+                    nextSegmentStart += mWorkout.getDuration(ind);
+                }
+            });
+
+            int segmentDuration = segmentTimeLeft;
+            segmentDescription = mWorkout.getDescription(i);
             segmentCompleted = false;
             skip_segment = false;
             Log.d(TAG, "Segment" + i + " setting Target Power: " + lastTargetPower + " W for " + segmentTimeLeft + " seconds");
-            //Toast.makeText(mContext, "T = " + mWorkout.get(i).first + "W" + mWorkout.get(i).second, Toast.LENGTH_SHORT).show();
-            //setTargetPower(targetPowerVal);
-            while (segmentCompleted == false) {
-                startTimer(segmentTimeLeft, lastTargetPower);
+            setTargetPower(i, lastTargetPower, true, segmentDescription);
+            setNextSegment(i+1);
+            while (segmentTimeLeft > 0) {
+                startTimer(segmentTimeLeft);
                 try {
                     Log.d(TAG, "Going to sleep for " + segmentTimeLeft + " seconds");
-                    sleep(segmentTimeLeft * 1000);
+                    sleep(segmentDuration * 1000);
                 } catch (InterruptedException e) {
                     Log.d(TAG, "Workout Interrupted");
                     if (shouldPause == true) {
                         try {
                             Log.d(TAG, "Pausing workout at Segment #" + i + " current power = " + lastTargetPower + " W left time " + segmentTimeLeft + " sec. to the end of current segment");
-                            setTargetPower(i, 100, false);
+                            setTargetPower(i, 100, false, "Easy Spin");
                             synchronized (this) {
                                 wait();
                             }
+                            Log.d(TAG, "Continue workout");
+                            setTargetPower(i, lastTargetPower, true, mWorkout.getDescription(i));
                         } catch (InterruptedException e1) {
                             Log.d(TAG, "Wait Interrupted");
-                            if (shouldPause == false) {
-                                Log.d(TAG, "Stopping workout");
-                                break workout_loop;
-                            }
+                            Log.d(TAG, "Stopping workout");
+                            break workout_loop;
                         }
-                        Log.d(TAG, "Woke up, continue workout");
                     } else {
                         if (skip_segment == true) {
                             Log.d(TAG, "Skipping segment");
+                            segmentTimeLeft = Integer.MAX_VALUE;
                             //showToast("Skipping current segment!");
                             break;
                         }
                         else {
                             Log.d(TAG, "Stopping workout");
                             showToast("Workout Stopped !");
-                            setTargetPower(i, 100, true);
+                            setTargetPower(i, 100, true, "Easy Spin");
+                            updateTimer("00:00");
                             return;
                         }
                     }
                 }
-                if (segmentTimeLeft == 0) {
-                    segmentCompleted = true;
-                    segmentTimeLeft = Integer.MAX_VALUE;
-                    Log.d(TAG, "Segment finished");
-                }
-
             }
+            segmentTimeLeft = Integer.MAX_VALUE;
+            Log.d(TAG, "Segment finished");
         }
 
         showToast("Workout DONE!");
-        setTargetPower(0, 100, true);
+        setTargetPower(0, 100, true, "Easy Spin");
+        updateTimer("00:00");
         mFragment.setWorkoutInProgress(false);
         Thread.currentThread().interrupt();
     }
 
-    void startTimer(final int countDownSeconds, final int targetPower) {
+    void startTimer(final int countDownSeconds) {
+        Log.d(TAG, "Starting Timer for " + countDownSeconds + " sec." );
         final int countDownInterval = 1000;
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
@@ -134,19 +156,18 @@ public class WorkoutExecThread extends Thread {
                                     strToDisplay = String.format("%02d:%02d", minutes, seconds);
                                 else
                                     strToDisplay = String.format("%02d:%02d:%02d", hours, minutes, seconds);
-                                mSegmentTimer.setText(strToDisplay);
+                                mFragment.setSegmentTimer(strToDisplay);
                                 mFragment.setSegmentTimeLeft(segmentTimeLeft);
+                                mFragment.setLine(-1);
                             }
                         });
                     }
 
                     public void onFinish() {
-                        mSegmentTimer.setText("00:00");
-
+                        updateTimer("00:00");
                     }
                 };
                 cTimer.start();
-                setTargetPower(0, targetPower, true);
 
             }
         });
@@ -187,17 +208,86 @@ public class WorkoutExecThread extends Thread {
         });
     }
 
-    private void setTargetPower(final int segment, final int power, boolean setLastTargetPower){
-        mTrainerController.setTargetPower(new BigDecimal(power));
+    private void updateTimer(final String strTime){
         mActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mTargetPower.setText("" + power);
+                mFragment.setSegmentTimer(strTime);
             }
         });
-        mFragment.setLastSegment(segment);
-        if (setLastTargetPower == true)
-            lastTargetPower = power;
+
+    }
+
+    private void setTargetPower(final int segment, final int power, boolean setLastTargetPower, final String description){
+        int attempts = 1;
+        boolean res = false;
+        while (res == false && attempts <=2) {
+            Log.d(TAG, "Setting Target Power " + power + " attempt #" + attempts);
+
+            res = mTrainerController.setTargetPower(new BigDecimal(power));
+            if (res == false) {
+                attempts++;
+                continue;
+            }
+
+            mActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mFragment.setTargetPower("" + power);
+                    mFragment.setSegmentDescription(description);
+                }
+            });
+            mFragment.setLastSegment(segment);
+            if (setLastTargetPower == true)
+                lastTargetPower = power;
+            break;
+        }
+        final int num_attempts = attempts;
+        if (res == false){
+            mActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                   Toast.makeText(mContext, "After " + num_attempts + " attempts Target Power " + power + " was not set. ", Toast.LENGTH_SHORT);
+                }
+            });
+
+        }
+    }
+
+    private void setNextSegment(final int i){
+
+        if (i < mWorkout.getSize()){
+            final String strToDisplay;
+            int timeSeconds = mWorkout.getDuration(i);
+            int seconds = (int)((timeSeconds) % 60) ;
+            int minutes = (int)((timeSeconds/60) % 60);
+            int hours   = (int)((timeSeconds/(60*60)) % 24);
+            if (hours == 0)
+                strToDisplay = String.format("%02d:%02d", minutes, seconds);
+            else
+                strToDisplay = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+
+            mActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mFragment.setNextSegmentTimer(strToDisplay);
+                    mFragment.setNextSegmentDescription(mWorkout.getDescription(i));
+                    mFragment.setNextTargetPower(""+mWorkout.getPower(i));
+                }
+            });
+
+        }
+        else {
+            mActivity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mFragment.setNextSegmentTimer("00:00");
+                    mFragment.setNextSegmentDescription("Easy Spin");
+                    mFragment.setNextTargetPower("100");
+                }
+            });
+
+        }
     }
 
 }

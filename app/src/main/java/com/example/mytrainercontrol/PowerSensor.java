@@ -18,6 +18,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.widget.Button;
 import android.widget.TextView;
@@ -66,6 +67,7 @@ public class PowerSensor
     Context mContext;
     Activity mActivity;
     TextView mCurrentPower;
+    TextView mPowerTitle;
     
     //NOTE: We're using 2.07m as the wheel circumference to pass to the calculated events
     BigDecimal wheelCircumferenceInMeters = new BigDecimal("2.07");
@@ -157,10 +159,11 @@ public class PowerSensor
     Button button_setCtfSlope;
     Button button_commandBurst;
 
-    public PowerSensor(Activity activity, Context context, TextView currentPower){
+    public PowerSensor(Activity activity, Context context, TextView currentPower, TextView powerTitle){
         mContext = context;
         mActivity = activity;
         mCurrentPower = currentPower;
+        mPowerTitle = powerTitle;
     }
 
 
@@ -176,6 +179,15 @@ public class PowerSensor
                     pwrPcc = result;
                     //textView_status.setText(result.getDeviceName() + ": " + initialDeviceState);
                     Toast.makeText(mContext, result.getDeviceName() + ": " + initialDeviceState, Toast.LENGTH_SHORT).show();
+                    if (initialDeviceState == DeviceState.TRACKING) {
+                        mPowerTitle.setTextColor(Color.GREEN);
+                        mCurrentPower.setTextColor(Color.WHITE);
+                    }
+                    else {
+                        mPowerTitle.setTextColor(Color.RED);
+                        mCurrentPower.setTextColor(Color.GRAY);
+                        mCurrentPower.setText("999");
+                    }
                     subscribeToEvents();
                     break;
                 case CHANNEL_NOT_AVAILABLE:
@@ -1114,6 +1126,15 @@ public class PowerSensor
                 {
                     //textView_status.setText(pwrPcc.getDeviceName() + ": " + newDeviceState);
                     Toast.makeText(mContext, pwrPcc.getDeviceName() + ": " + newDeviceState, Toast.LENGTH_SHORT).show();
+                    if (newDeviceState == DeviceState.TRACKING) {
+                        mPowerTitle.setTextColor(Color.GREEN);
+                        mCurrentPower.setTextColor(Color.WHITE);
+                    }
+                    else {
+                        mPowerTitle.setTextColor(Color.RED);
+                        mCurrentPower.setTextColor(Color.GRAY);
+                        mCurrentPower.setText("999");
+                    }
 
                 }
             });

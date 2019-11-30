@@ -5,8 +5,12 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
+import android.util.Log;
 import android.widget.Toast;
+
+import androidx.fragment.app.Fragment;
 
 import com.dsi.ant.plugins.antplus.common.FitFileCommon;
 import com.dsi.ant.plugins.antplus.pcc.AntPlusFitnessEquipmentPcc;
@@ -19,6 +23,7 @@ import com.dsi.ant.plugins.antplus.pccbase.AntPlusCommonPcc;
 import com.dsi.ant.plugins.antplus.pccbase.MultiDeviceSearch;
 import com.dsi.ant.plugins.antplus.pccbase.PccReleaseHandle;
 import com.dsi.ant.plugins.antplus.pcc.AntPlusFitnessEquipmentPcc.Settings;
+import com.example.mytrainercontrol.Fragment_ManualPowerControl;
 
 
 import java.io.ByteArrayOutputStream;
@@ -29,18 +34,25 @@ import java.util.EnumSet;
 
 public class TrainerController {
 
+    private static final String TAG = "PowerControl TC";
+
+
     Context mContext;
     Activity mActivity;
+    Fragment_ManualPowerControl mFragment;
     AntPlusFitnessEquipmentPcc fePcc = null;
     PccReleaseHandle<AntPlusFitnessEquipmentPcc> releaseHandle = null;
     boolean subscriptionsDone = false;
-    //boolean include_workout = true;
     FitFileCommon.FitFile[] files;
     Settings settings;
+    BigDecimal speedConvert;
 
-    public TrainerController(Activity activity, Context context){
+
+    public TrainerController(Activity activity, Context context, Fragment_ManualPowerControl fragment){
         mContext = context;
         mActivity = activity;
+        mFragment = fragment;
+        speedConvert = new BigDecimal(3.601);
     }
 
     public PccReleaseHandle<AntPlusFitnessEquipmentPcc> getReleaseHandle() {
@@ -66,13 +78,16 @@ public class TrainerController {
                             switch(requestStatus)
                             {
                                 case SUCCESS:
+                                    Log.d(TAG, "Request Successfully Sent");
                                     //Toast.makeText(mContext, "Request Successfully Sent", Toast.LENGTH_SHORT).show();
                                     break;
                                 case FAIL_PLUGINS_SERVICE_VERSION:
+                                    Log.d(TAG, "Plugin Service Upgrade Required?");
                                     Toast.makeText(mContext, "Plugin Service Upgrade Required?", Toast.LENGTH_SHORT).show();
                                     break;
                                 default:
-                                    Toast.makeText(mContext, "Request Failed to be Sent", Toast.LENGTH_SHORT).show();
+                                    Log.d(TAG, "Request Failed to be Sent");
+                                    //Toast.makeText(mContext, "Request Failed to be Sent", Toast.LENGTH_SHORT).show();
                                     break;
                             }
                         }
@@ -86,10 +101,15 @@ public class TrainerController {
         boolean submitted = false;
         if (fePcc != null) {
             submitted = fePcc.getTrainerMethods().requestSetTargetPower(targetPower, requestFinishedReceiver);
-            if (!submitted)
-                Toast.makeText(mContext, "Too Fast, Request Could not be Made", Toast.LENGTH_SHORT).show();
+            if (!submitted) {
+                Log.d(TAG, "Too Fast, Request Could not be Made");
+                //showToast("Too Fast, Request Could not be Made");
+                //Toast.makeText(mContext, "Too Fast, Request Could not be Made", Toast.LENGTH_SHORT).show();
+            }
         } else {
-            Toast.makeText(mContext, "No Trainer found, Target Power can not be set", Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "No Trainer found, Target Power can not be set");
+            showToast("No Trainer found, Target Power can not be set");
+            //Toast.makeText(mContext, "No Trainer found, Target Power can not be set", Toast.LENGTH_SHORT).show();
         }
         return submitted;
     }
@@ -119,7 +139,31 @@ public class TrainerController {
                             case SUCCESS:
                                 fePcc = result;
                                 Toast.makeText(mContext, "Access Successful to Device ID: " + String.valueOf(fePcc.getAntDeviceNumber()), Toast.LENGTH_SHORT).show();
-
+                                //if (initialDeviceState == DeviceState.TRACKING) {
+                                mFragment.setActualPowerColor(Color.WHITE);
+                                mFragment.setActualPowerTitleColor(Color.GREEN);
+                                mFragment.setSpeedTitleColor(Color.GREEN);
+                                mFragment.setSpeedTextColor(Color.WHITE);
+                                mFragment.setTotalDistanceColor(Color.WHITE);
+                                mFragment.setTotalDistanceTitleColor(Color.GREEN);
+                                mFragment.setWorkoutTimerColor(Color.WHITE);
+                                mFragment.setWorkoutTimerTitleColor(Color.GREEN);
+                                mFragment.setCadenceColor(Color.WHITE);
+                                mFragment.setCadenceTitleColor(Color.GREEN);
+                                //}
+                                /*else {
+                                    mFragment.setActualPowerColor(Color.GRAY);
+                                    mFragment.setActualPowerTitleColor(Color.RED);
+                                    mFragment.setSpeedTextColor(Color.GRAY);
+                                    mFragment.setSpeedTitleColor(Color.RED);
+                                    mFragment.setSpeedTextColor(Color.GRAY);
+                                    mFragment.setTotalDistanceColor(Color.GRAY);
+                                    mFragment.setWorkoutTimerColor(Color.GRAY);
+                                    mFragment.setWorkoutTimerTitleColor(Color.RED);
+                                    mFragment.setTotalDistanceTitleColor(Color.RED);
+                                    mFragment.setCadenceColor(Color.GRAY);
+                                    mFragment.setCadenceTitleColor(Color.RED);
+                                }*/
                                 //if(initialDeviceState == DeviceState.CLOSED)
                                     //Toast.makeText(mContext, fePcc.getDeviceName() + ": " + "Waiting for FE Session Request", Toast.LENGTH_SHORT).show();
                                 //else
@@ -212,18 +256,26 @@ public class TrainerController {
                                             Toast.makeText(mContext, "Elapsed time = " + String.valueOf(elapsedTime) + "s", Toast.LENGTH_SHORT).show();
                                         */
 
-                                        /*if(cumulativeDistance == -1)
+                                        /*if(cumulativeDistance == -1) {
+                                            Log.d(TAG, "Invalid cumulative distance time = -1");
                                             Toast.makeText(mContext, "Invalid cumulative distance time = -1", Toast.LENGTH_SHORT).show();
-                                        else
-                                            Toast.makeText(mContext, "Cumulative distance = " + String.valueOf(cumulativeDistance) + "m", Toast.LENGTH_SHORT).show();
-                                        */
+                                        }
+                                        else {
+                                            mFragment.setTotalDistance(String.valueOf(cumulativeDistance));
+                                            //Toast.makeText(mContext, "Cumulative distance = " + String.valueOf(cumulativeDistance) + "m", Toast.LENGTH_SHORT).show();
+                                        }*/
 
-                                        /*
-                                        if(instantaneousSpeed.intValue() == -1)
+                                        mFragment.setWorkoutTimer(elapsedTime.floatValue());
+                                        if(instantaneousSpeed.intValue() == -1) {
+                                            Log.d(TAG, "Invalid instantaneous speed = -1");
                                             Toast.makeText(mContext, "Invalid instantaneous speed = -1", Toast.LENGTH_SHORT).show();
-                                        else
-                                            Toast.makeText(mContext, "Instantaneous speed = " + String.valueOf(instantaneousSpeed) + "m/s", Toast.LENGTH_SHORT).show();
-                                        
+                                        }
+                                        else {
+                                            mFragment.setSpeed(instantaneousSpeed.multiply(speedConvert).toPlainString());
+                                            mFragment.setDistance(elapsedTime.floatValue(), instantaneousSpeed.floatValue());
+                                            //Toast.makeText(mContext, "Instantaneous speed = " + String.valueOf(instantaneousSpeed) + "m/s", Toast.LENGTH_SHORT).show();
+                                        }
+                                        /*
                                         if(virtualInstantaneousSpeed)
                                             Toast.makeText(mContext, "(Virtual) Instantaneous speed = " + String.valueOf(instantaneousSpeed) + "m/s", Toast.LENGTH_SHORT).show();
                                         */
@@ -235,7 +287,7 @@ public class TrainerController {
                                             Toast.makeText(mContext, "Heart rate = " + String.valueOf(instantaneousHeartRate) + "bpm", Toast.LENGTH_SHORT).show();
                                         */
 
-                                        switch(heartRateDataSource)
+                                        /*switch(heartRateDataSource)
                                         {
                                             case ANTPLUS_HRM:
                                             case EM_5KHz:
@@ -249,7 +301,7 @@ public class TrainerController {
                                                         "Failed: UNRECOGNIZED. PluginLib Upgrade Required?",
                                                         Toast.LENGTH_SHORT).show();
                                                 break;
-                                        }
+                                        }*/
 
                                     }
                                 });
@@ -270,6 +322,28 @@ public class TrainerController {
                             @Override
                             public void run()
                             {
+                                if (newDeviceState == DeviceState.DEAD) {
+                                    resetPcc(false);
+
+                                }
+                                if (newDeviceState == DeviceState.DEAD ||
+                                    newDeviceState == DeviceState.CLOSED ||
+                                    newDeviceState == DeviceState.SEARCHING ||
+                                    newDeviceState == DeviceState.UNRECOGNIZED)
+                                {
+                                    mFragment.setActualPowerColor(Color.GRAY);
+                                    mFragment.setActualPowerTitleColor(Color.RED);
+                                    mFragment.setSpeedTitleColor(Color.RED);
+                                    mFragment.setSpeedTextColor(Color.GRAY);
+                                    mFragment.setSpeed("999");
+                                    mFragment.setTotalDistanceColor(Color.GRAY);
+                                    mFragment.setTotalDistanceTitleColor(Color.RED);
+                                    mFragment.setWorkoutTimerColor(Color.GRAY);
+                                    mFragment.setWorkoutTimerTitleColor(Color.RED);
+                                    mFragment.setCadenceColor(Color.GRAY);
+                                    mFragment.setCadenceTitleColor(Color.RED);
+                                }
+
                                 //Note: The state here is the state of our data receiver channel which is closed until the ANTFS session is established
                                 //if(newDeviceState == DeviceState.CLOSED)
                                 //{
@@ -485,17 +559,24 @@ public class TrainerController {
                                                         //NOTE: If the update event count has not incremented then the data on this page has not changed.
                                                         //Please refer to the ANT+ Fitness Equipment Device Profile for more information.
                                                         /*textView_TrainerUpdateEventCount.setText(String.valueOf(updateEventCount));
+                                                        // LEONID
+                                                        */
+                                                        if(instantaneousCadence != -1) {
+                                                            //textView_TrainerInstantaneousCadence.setText(String.valueOf(instantaneousCadence) + "RPM");
+                                                            mFragment.setCadence(String.valueOf(instantaneousCadence));
+                                                        } else {
+                                                            Log.d(TAG, "instantaneousCadence = -1");
+                                                        }
 
-                                                        if(instantaneousCadence != -1)
-                                                            textView_TrainerInstantaneousCadence.setText(String.valueOf(instantaneousCadence) + "RPM");
-                                                        else
-                                                            textView_TrainerInstantaneousCadence.setText("N/A");
+                                                        if(instantaneousPower != -1) {
+                                                            //textView_TrainerInstantaneousPower.setText(String.valueOf(instantaneousPower) + "W");
+                                                            mFragment.setActualPower(String.valueOf(instantaneousPower));
 
-                                                        if(instantaneousPower != -1)
-                                                            textView_TrainerInstantaneousPower.setText(String.valueOf(instantaneousPower) + "W");
-                                                        else
-                                                            textView_TrainerInstantaneousPower.setText("N/A");
+                                                        } else {
+                                                            Log.d(TAG, "instantaneousPower = -1");
 
+                                                        }
+                                                        /*
                                                         if(accumulatedPower != -1)
                                                             textView_TrainerAccumulatedPower.setText(String.valueOf(accumulatedPower) + "W");
                                                         else
@@ -979,6 +1060,14 @@ public class TrainerController {
         }*/
     }
 
+    private void showToast(final String message){
+        mActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
 
     public void onDestroy()
     {

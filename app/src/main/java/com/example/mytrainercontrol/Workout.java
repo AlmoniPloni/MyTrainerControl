@@ -10,15 +10,21 @@ public class Workout {
 
     List<Integer> mDurations;
     List<Integer> mPowers;
+    List<String> mDescriptions;
+    int mTotalDuraction;
 
     public Workout() {
         mDurations = new ArrayList<>();
         mPowers = new ArrayList<>();
+        mDescriptions = new ArrayList<>();
+        mTotalDuraction = 0;
     }
 
-    public void addDurationPower(int duration, int power) {
+    public void addSegment(int duration, int power, String description) {
         mDurations.add(duration);
         mPowers.add(power);
+        mDescriptions.add(description);
+        mTotalDuraction += duration;
     }
 
     public List<Integer> getDuration(){
@@ -36,6 +42,12 @@ public class Workout {
     public int getDuration(int i) {
         return mDurations.get(i);
     }
+
+    public int getTotalDuraction(){
+        return mTotalDuraction;
+    }
+
+    public String getDescription(int i) {return mDescriptions.get(i); }
 
     public int getSize(){
         return mPowers.size();
