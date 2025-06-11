@@ -34,10 +34,12 @@ public class WorkoutExecThread extends Thread {
     boolean shouldPause;
     boolean segmentCompleted;
     boolean skip_segment;
+    boolean go_back;
     int startSegment;
     String segmentDescription;
     String nextSegmentDescription;
     int nextSegmentStart;
+    boolean isForward;
 
 
 
@@ -57,22 +59,35 @@ public class WorkoutExecThread extends Thread {
         startSegment = fragmentFEC.lastSegment;
         segmentTimeLeft = fragmentFEC.segmentTimeLeft;
         nextSegmentStart = 0;
+        go_back = false;
+        isForward = true;
 
     }
 
     public void run() {
-        workout_loop: for (int i = startSegment; i < mWorkout.getSize(); i++) {
+        int i = startSegment;
+        workout_loop: while (i < mWorkout.getSize()) {
             mFragment.setLastSegment(i);
             lastTargetPower = mWorkout.getPower(i);
             segmentTimeLeft =  min(segmentTimeLeft, mWorkout.getDuration(i)+1);
 
-            // Set moving ling to start from the beginning of segment
+            // Set moving linе to start from the beginning of segment
             final int ind = i;
             mActivity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    mFragment.setLine(nextSegmentStart);
-                    nextSegmentStart += mWorkout.getDuration(ind);
+                    if (ind == 0) {
+                        mFragment.setLine(0);
+                    }
+                    else {
+                        //int direction = isForward ? +1 : -1;
+                        //nextSegmentStart += direction * mWorkout.getDuration(ind);
+                        int nextSegmentStart = 0;
+                        for (int j = 0; j < ind; j++) {
+                            nextSegmentStart += mWorkout.getDuration(j);
+                        }
+                        mFragment.setLine(nextSegmentStart);
+                    }
                 }
             });
 
@@ -80,7 +95,7 @@ public class WorkoutExecThread extends Thread {
             segmentDescription = mWorkout.getDescription(i);
             segmentCompleted = false;
             skip_segment = false;
-            Log.d(TAG, "Segment" + i + " setting Target Power: " + lastTargetPower + " W for " + segmentTimeLeft + " seconds");
+            Log.d(TAG, "Segment " + i + " setting Target Power: " + lastTargetPower + " W for " + segmentTimeLeft + " seconds");
             setTargetPower(i, lastTargetPower, true, segmentDescription);
             setNextSegment(i+1);
             while (segmentTimeLeft > 0) {
@@ -109,7 +124,24 @@ public class WorkoutExecThread extends Thread {
                             Log.d(TAG, "Skipping segment");
                             segmentTimeLeft = Integer.MAX_VALUE;
                             //showToast("Skipping current segment!");
+                            isForward = true;
                             break;
+                        }
+                        else if (go_back == true){
+                            Log.d(TAG, "Going back one segment: i = " + i);
+                            if (i >= 1) {
+                                //segmentTimeLeft = mWorkout.getDuration(i - 1); // Reset segment time
+                                i = i - 2;  // No need for Math.max, since i >= 1
+                            } else {
+                                Log.d(TAG, "Already at first segment, can't go back");
+                                //segmentTimeLeft = mWorkout.getDuration(0);
+                                i = -1; // So i++ makes it 0 again
+                            }
+                            go_back = false;
+                            isForward = false;
+                            break;
+                            //continue;
+
                         }
                         else {
                             Log.d(TAG, "Stopping workout");
@@ -123,6 +155,7 @@ public class WorkoutExecThread extends Thread {
             }
             segmentTimeLeft = Integer.MAX_VALUE;
             Log.d(TAG, "Segment finished");
+            i++;
         }
 
         showToast("Workout DONE!");
@@ -143,7 +176,7 @@ public class WorkoutExecThread extends Thread {
 
                     public void onTick(final long millisUntilFinished) {
                         segmentTimeLeft = (int) millisUntilFinished/1000;
-                        Log.d(TAG, "onTick: " + millisUntilFinished + " millis until finished " + segmentTimeLeft + " sec. until finished" );
+                        //Log.d(TAG, "onTick: " + millisUntilFinished + " millis until finished " + segmentTimeLeft + " sec. until finished" );
                         mActivity.runOnUiThread(new Runnable() {
                             String strToDisplay;
                             @Override
@@ -198,6 +231,11 @@ public class WorkoutExecThread extends Thread {
         this.interrupt();
     }
 
+    public void previousSegment() {
+        go_back = true;
+        cTimer.cancel();
+        this.interrupt();
+    }
 
     private void showToast(final String message){
         mActivity.runOnUiThread(new Runnable() {
@@ -221,7 +259,7 @@ public class WorkoutExecThread extends Thread {
     private void setTargetPower(final int segment, final int power, boolean setLastTargetPower, final String description){
         int attempts = 1;
         boolean res = false;
-        while (res == false && attempts <=2) {
+        while (res == false && attempts <= 5) {
             Log.d(TAG, "Setting Target Power " + power + " attempt #" + attempts);
 
             res = mTrainerController.setTargetPower(new BigDecimal(power));

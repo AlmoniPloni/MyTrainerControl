@@ -1858,16 +1858,13 @@ public class Fragment_FitnessEquipmentSampler extends Fragment
     */
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item)
-    {
-        switch(item.getItemId())
-        {
-            case R.id.menu_reset:
-                resetPcc();
-                tv_status.setText("Resetting...");
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.menu_reset) {
+            resetPcc();
+            tv_status.setText("Resetting...");
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
         }
     }
 }

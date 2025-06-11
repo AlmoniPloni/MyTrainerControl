@@ -1,8 +1,10 @@
 apply plugin: 'com.android.application'
-apply plugin: 'io.fabric'
+//apply plugin: 'io.fabric'
 
 android {
+    namespace 'com.example.mytrainercontrol'  // ✅ Add this line
     compileSdkVersion 28
+
     defaultConfig {
         applicationId "com.example.mytrainercontrol"
         minSdkVersion 16
@@ -11,6 +13,7 @@ android {
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -19,43 +22,49 @@ android {
     }
 }
 
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
 
 allprojects {
     repositories {
-        // Check that you have the following line (if not, add it):
-        google()  // Google's Maven repository
+        google()
         maven { url 'https://jitpack.io' }
-
     }
 }
+
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    // Old support libraries (you can later migrate to AndroidX)
     implementation 'com.android.support:appcompat-v7:28.0.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
+    implementation 'com.android.support:design:28.0.0'
+
+    // Firebase Analytics (keep)
+    implementation 'com.google.firebase:firebase-analytics:17.2.1'
+
+    // Gson (keep)
+    implementation 'com.google.code.gson:gson:2.8.2'
+
+    // MPAndroidChart (keep)
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+
+    // EasyPermissions (keep)
+    implementation 'pub.devrel:easypermissions:3.0.0'
+
+    // Test dependencies
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    implementation 'com.android.support:design:28.0.0'
-    // Add the Firebase SDK for Google Analytics
-    //implementation 'com.google.firebase:firebase-analytics:16.5.0'
-    implementation 'com.google.firebase:firebase-analytics:17.2.1'
-    implementation 'com.google.code.gson:gson:2.8.2'
-    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
-    implementation 'com.crashlytics.sdk.android:crashlytics:2.10.1'
-    implementation fileTree(dir: 'src\\main\\libs', include: ['*.aar', '*.jar'], exclude: [])
-    implementation 'pub.devrel:easypermissions:3.0.0'
 
-    // Add the SDKs for any other Firebase products you want to use in your app
-    // For example, to use Firebase Authentication and Cloud Firestore
-    //implementation 'com.google.firebase:firebase-auth:17.0.0'
-    //implementation 'com.google.firebase:firebase-firestore:19.0.0'
+    // Local JAR/AAR files
+    // implementation fileTree(dir: 'src\\main\\libs', include: ['*.aar', '*.jar'], exclude: [])
+    implementation(name: 'antpluginlib_3-9-0', ext: 'aar')
 }
 
-apply plugin: 'com.android.application'
-
-android {
-    // ...
-}
-
-// Add the following line to the bottom of the file:
-apply plugin: 'com.google.gms.google-services'  // Google Play services Gradle plugin
+// ✅ Add this at the bottom (only once)
+apply plugin: 'com.google.gms.google-services'

@@ -71,7 +71,7 @@ public class WorkoutReader {
             }
     }
 
-    public Workout setWorkout(Uri csvFileURI){
+    public Workout setWorkout_old(Uri csvFileURI){
         //csvFile = new File(getRealPathFromURI(csvFileURI));
         try {
             //br = new BufferedReader(new InputStreamReader(mActivity.getAssets().open("19112019.csv")));
@@ -118,6 +118,69 @@ public class WorkoutReader {
         }
         return workout;
     }
+
+    public Workout setWorkout(Uri csvFileURI) {
+        BufferedReader br = null;
+        String line;
+        String cvsSplitBy = ",";
+        Workout workout = new Workout(); // Ensure workout is initialized
+
+        try {
+            InputStream targetStream = mActivity.getContentResolver().openInputStream(csvFileURI);
+            br = new BufferedReader(new InputStreamReader(targetStream));
+
+            int lineNumber = 0;
+
+            while ((line = br.readLine()) != null) {
+                lineNumber++;
+                String[] row = line.split(cvsSplitBy);
+
+                // Skip if fewer than 3 columns
+                if (row.length < 3) {
+                    Log.w(TAG, "Skipping line " + lineNumber + ": insufficient columns: " + Arrays.toString(row));
+                    continue;
+                }
+
+                try {
+                    // Trim each field
+                    String durationStr = row[0].trim();
+                    String powerStr = row[2].trim();
+                    String description = (row.length >= 4) ? row[3].trim() : "";
+
+                    // Convert to seconds (assumes minutes unless row[1] contains "sec")
+                    int duration = (int) (60 * Double.parseDouble(durationStr));
+                    if (row[1].toLowerCase().contains("sec")) {
+                        duration /= 60;
+                    }
+
+                    int power = Integer.parseInt(powerStr);
+                    workout.addSegment(duration, power, description);
+
+                    Log.d(TAG, "Parsed line " + lineNumber + ": duration=" + duration + ", power=" + power + ", description=" + description);
+
+                } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                    Log.w(TAG, "Skipping line " + lineNumber + ": parse error -> " + Arrays.toString(row), e);
+                }
+            }
+
+        } catch (FileNotFoundException e) {
+            Toast.makeText(mContext, "File not found.", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "File not found", e);
+        } catch (IOException e) {
+            Log.e(TAG, "IO error reading file", e);
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    Log.e(TAG, "Error closing reader", e);
+                }
+            }
+        }
+
+        return workout;
+    }
+
 
 
     //public Workout readWorkout() {

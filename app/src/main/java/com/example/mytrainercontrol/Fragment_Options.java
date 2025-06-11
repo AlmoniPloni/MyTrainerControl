@@ -56,36 +56,32 @@ public class Fragment_Options extends Fragment implements View.OnClickListener {
     @Override
     public void onClick(View v) {
         FragmentTransaction transaction;
-        switch (v.getId()) {
-            case R.id.manual_power_control: {
-                Toast.makeText(getContext(), "Manual Power Control Selected.", Toast.LENGTH_SHORT).show();
-                fragmentManualPowerControl = new Fragment_ManualPowerControl();
-                transaction = getActivity().getSupportFragmentManager().beginTransaction();
-                transaction.replace(R.id.main_activity, fragmentManualPowerControl, "ManualPowerControlFragment");
-                transaction.addToBackStack("ManualPowerControl");
-                transaction.commitAllowingStateLoss();
-                break;
-            }
-            case R.id.scan_devices:{
-                Toast.makeText(getContext(), "Scan for Devices Selected.", Toast.LENGTH_SHORT).show();
-                fragmentScanDevices = new Fragment_MultiDeviceSearchSampler();
-                transaction = getActivity().getSupportFragmentManager().beginTransaction();
-                transaction.replace(R.id.main_activity, fragmentScanDevices);
-                transaction.addToBackStack("ScandDevices");
-                transaction.commitAllowingStateLoss();
-                break;
-            }
-            case R.id.scan_trainer:{
-                Toast.makeText(getContext(), "Scan for Trainer Selected.", Toast.LENGTH_SHORT).show();
 
-                fragmentScanTrainer = new Fragment_FitnessEquipmentSampler();
-                transaction = getActivity().getSupportFragmentManager().beginTransaction();
-                transaction.replace(R.id.main_activity, fragmentScanTrainer);
-                transaction.addToBackStack("ScanTrainer");
-                transaction.commitAllowingStateLoss();
-                break;
-            }
+        int id = v.getId();
+
+        if (id == R.id.manual_power_control) {
+            Toast.makeText(getContext(), "Manual Power Control Selected.", Toast.LENGTH_SHORT).show();
+            fragmentManualPowerControl = new Fragment_ManualPowerControl();
+            transaction = getActivity().getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.main_activity, fragmentManualPowerControl, "ManualPowerControlFragment");
+            transaction.addToBackStack("ManualPowerControl");
+            transaction.commitAllowingStateLoss();
+
+        } else if (id == R.id.scan_devices) {
+            Toast.makeText(getContext(), "Scan for Devices Selected.", Toast.LENGTH_SHORT).show();
+            fragmentScanDevices = new Fragment_MultiDeviceSearchSampler();
+            transaction = getActivity().getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.main_activity, fragmentScanDevices);
+            transaction.addToBackStack("ScandDevices");
+            transaction.commitAllowingStateLoss();
+
+        } else if (id == R.id.scan_trainer) {
+            Toast.makeText(getContext(), "Scan for Trainer Selected.", Toast.LENGTH_SHORT).show();
+            fragmentScanTrainer = new Fragment_FitnessEquipmentSampler();
+            transaction = getActivity().getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.main_activity, fragmentScanTrainer);
+            transaction.addToBackStack("ScanTrainer");
+            transaction.commitAllowingStateLoss();
         }
-
     }
 }

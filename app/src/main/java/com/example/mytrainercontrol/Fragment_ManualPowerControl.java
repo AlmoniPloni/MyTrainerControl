@@ -60,10 +60,11 @@ public class Fragment_ManualPowerControl extends Fragment {
     View rootView;
     Button btnPowerIncrease;
     Button btnPowerDecrease;
-    Button btnStartWorkout;
+    Button btnStartStopWorkout;
     Button btnPauseWorkout;
-    Button btnStopWorkout;
+    //Button btnStopWorkout;
     Button btnNextSegment;
+    Button btnPrevSegment;
 
     TextView targetPower;
     TextView nextTargetPower;
@@ -111,6 +112,40 @@ public class Fragment_ManualPowerControl extends Fragment {
     int segmentTimeLeft;
     int lastSegment;
 
+    DialogInterface.OnClickListener stopDialogClickListener = new DialogInterface.OnClickListener() { // from class: com.example.mytrainercontrol.Fragment_ManualPowerControl.7
+        @Override // android.content.DialogInterface.OnClickListener
+        public void onClick(DialogInterface dialog, int which) {
+            if (which == -2) {
+                Log.d(Fragment_ManualPowerControl.TAG, "No clicked, Don't Stop Workout");
+                return;
+            }
+            if (which == -1) {
+                Toast.makeText(Fragment_ManualPowerControl.this.getContext(), "Stopping workout", Toast.LENGTH_SHORT).show();
+                Log.d(Fragment_ManualPowerControl.TAG, "Interrupting Workout Execution Thread Now !");
+                Fragment_ManualPowerControl.this.workoutExecutionThread.stopWorkout();
+                Fragment_ManualPowerControl.this.reset();
+                Fragment_ManualPowerControl.this.openWokrout.setVisibility(View.VISIBLE);
+                Fragment_ManualPowerControl.this.powerChart.setVisibility(View.INVISIBLE);
+                Fragment_ManualPowerControl.this.btnStartStopWorkout.setText("START");
+            }
+        }
+    };
+    DialogInterface.OnClickListener resumeDialogClickListener = new DialogInterface.OnClickListener() { // from class: com.example.mytrainercontrol.Fragment_ManualPowerControl.8
+        @Override // android.content.DialogInterface.OnClickListener
+        public void onClick(DialogInterface dialog, int which) {
+            if (which == -2) {
+                Log.d(Fragment_ManualPowerControl.TAG, "No clicked, Don't resume anything");
+                Fragment_ManualPowerControl.this.reset();
+            } else if (which == -1) {
+                Toast.makeText(Fragment_ManualPowerControl.this.getContext(), "Resuming workout, where it stopped last time.", Toast.LENGTH_SHORT).show();
+                Log.d(Fragment_ManualPowerControl.TAG, "Resuming Workout where it stopped last time, now !");
+                Fragment_ManualPowerControl fragment_ManualPowerControl = Fragment_ManualPowerControl.this;
+                fragment_ManualPowerControl.workoutExecutionThread = new WorkoutExecThread(fragment_ManualPowerControl);
+                Fragment_ManualPowerControl.this.workoutExecutionThread.start();
+                Fragment_ManualPowerControl.this.workoutInProgress = true;
+            }
+        }
+    };
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -174,11 +209,14 @@ public class Fragment_ManualPowerControl extends Fragment {
             }
         });
 
-        btnStartWorkout = rootView.findViewById(R.id.start_workout);
-        btnStartWorkout.setOnClickListener(new View .OnClickListener() {
+        btnStartStopWorkout = rootView.findViewById(R.id.start_stop_workout);
+        btnStartStopWorkout.setOnClickListener(new View .OnClickListener() {
             public void onClick(View v) {
-                //Toast.makeText(getContext(), "Start Workout not implemented yet", Toast.LENGTH_SHORT).show();
-                startWorkout();
+                if (!Fragment_ManualPowerControl.this.workoutInProgress) {
+                    Fragment_ManualPowerControl.this.startWorkout();
+                } else {
+                    Fragment_ManualPowerControl.this.stopWorkout();
+                }
             }
         });
 
@@ -192,20 +230,28 @@ public class Fragment_ManualPowerControl extends Fragment {
             }
         });
 
-
-        btnStopWorkout = rootView.findViewById(R.id.stop_workout);
-        btnStopWorkout.setOnClickListener(new View .OnClickListener() {
-            public void onClick(View v) {
-                //Toast.makeText(getContext(), "Stop Workout not implemented yet", Toast.LENGTH_SHORT).show();
-                stopWorkout();
-            }
-        });
+//
+//        btnStopWorkout = rootView.findViewById(R.id.stop_workout);
+//        btnStopWorkout.setOnClickListener(new View .OnClickListener() {
+//            public void onClick(View v) {
+//                //Toast.makeText(getContext(), "Stop Workout not implemented yet", Toast.LENGTH_SHORT).show();
+//                stopWorkout();
+//            }
+//        });
 
         btnNextSegment = rootView.findViewById(R.id.next_segment);
         btnNextSegment.setOnClickListener(new View .OnClickListener() {
             public void onClick(View v) {
                 //sToast.makeText(getContext(), "Next Segment not implemented yet", Toast.LENGTH_SHORT).show();
                 nextSegment();
+            }
+        });
+
+        btnPrevSegment = rootView.findViewById(R.id.prev_segment);
+        btnPrevSegment.setOnClickListener(new View .OnClickListener() {
+            public void onClick(View v) {
+                //sToast.makeText(getContext(), "Next Segment not implemented yet", Toast.LENGTH_SHORT).show();
+                prevSegment();
             }
         });
 
@@ -217,8 +263,8 @@ public class Fragment_ManualPowerControl extends Fragment {
         //powerSensor = new PowerSensor(getActivity(), getContext(), actualPower, mActualPowerTitle);
         //powerSensor.resetPcc();
 
-        heartRateSensor = new HeartRateSensor(getActivity(), getContext(), mHearRate, mHeartRateTitle);
-        heartRateSensor.requestAccessToPcc();
+        //heartRateSensor = new HeartRateSensor(getActivity(), getContext(), mHearRate, mHeartRateTitle);
+        //heartRateSensor.requestAccessToPcc();
 
         workoutPaused = false;
         workoutInProgress = false;
@@ -336,60 +382,60 @@ public class Fragment_ManualPowerControl extends Fragment {
         }
     }
 
-    DialogInterface.OnClickListener stopDialogClickListener = new DialogInterface.OnClickListener() {
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-            switch (which){
-                case DialogInterface.BUTTON_POSITIVE:
-                    //Yes button clicked
-                    Toast.makeText(getContext(), "Stopping workout", Toast.LENGTH_SHORT).show();
-                    Log.d(TAG, "Interrupting Workout Execution Thread Now !");
-                    workoutExecutionThread.stopWorkout();
-                    /*btnPauseWorkout.setText("Pause");
-                    segmentTimer.setText("00:00");
-                    workoutPaused = false;
-                    workoutInProgress = false;
-                    segmentTimeLeft = Integer.MAX_VALUE;
-                    lastSegment = 0;*/
-                    reset();
-                    openWokrout.setVisibility(View.VISIBLE);
-                    powerChart.setVisibility(View.INVISIBLE);
-                    break;
-
-                case DialogInterface.BUTTON_NEGATIVE:
-                    //No button clicked
-                    Log.d(TAG, "No clicked, Don't Stop Workout");
-                    break;
-            }
-        }
-    };
-
-    DialogInterface.OnClickListener resumeDialogClickListener = new DialogInterface.OnClickListener() {
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-            switch (which){
-                case DialogInterface.BUTTON_POSITIVE:
-                    //Yes button clicked
-                    Toast.makeText(getContext(), "Resuming workout, where it stopped last time.", Toast.LENGTH_SHORT).show();
-                    Log.d(TAG, "Resuming Workout where it stopped last time, now !");
-                    workoutExecutionThread = new WorkoutExecThread(Fragment_ManualPowerControl.this);
-                    workoutExecutionThread.start();
-                    workoutInProgress = true;
-                    break;
-
-                case DialogInterface.BUTTON_NEGATIVE:
-                    //No button clicked
-                    Log.d(TAG, "No clicked, Don't resume anything");
-                    /*workoutPaused = false;
-                    workoutInProgress = false;
-                    lastSegment = 0;
-                    segmentTimeLeft = Integer.MAX_VALUE;
-                    workout = null;*/
-                    reset();
-                    break;
-            }
-        }
-    };
+//    DialogInterface.OnClickListener stopDialogClickListener = new DialogInterface.OnClickListener() {
+//        @Override
+//        public void onClick(DialogInterface dialog, int which) {
+//            switch (which){
+//                case DialogInterface.BUTTON_POSITIVE:
+//                    //Yes button clicked
+//                    Toast.makeText(getContext(), "Stopping workout", Toast.LENGTH_SHORT).show();
+//                    Log.d(TAG, "Interrupting Workout Execution Thread Now !");
+//                    workoutExecutionThread.stopWorkout();
+//                    /*btnPauseWorkout.setText("Pause");
+//                    segmentTimer.setText("00:00");
+//                    workoutPaused = false;
+//                    workoutInProgress = false;
+//                    segmentTimeLeft = Integer.MAX_VALUE;
+//                    lastSegment = 0;*/
+//                    reset();
+//                    openWokrout.setVisibility(View.VISIBLE);
+//                    powerChart.setVisibility(View.INVISIBLE);
+//                    break;
+//
+//                case DialogInterface.BUTTON_NEGATIVE:
+//                    //No button clicked
+//                    Log.d(TAG, "No clicked, Don't Stop Workout");
+//                    break;
+//            }
+//        }
+//    };
+//
+//    DialogInterface.OnClickListener resumeDialogClickListener = new DialogInterface.OnClickListener() {
+//        @Override
+//        public void onClick(DialogInterface dialog, int which) {
+//            switch (which){
+//                case DialogInterface.BUTTON_POSITIVE:
+//                    //Yes button clicked
+//                    Toast.makeText(getContext(), "Resuming workout, where it stopped last time.", Toast.LENGTH_SHORT).show();
+//                    Log.d(TAG, "Resuming Workout where it stopped last time, now !");
+//                    workoutExecutionThread = new WorkoutExecThread(Fragment_ManualPowerControl.this);
+//                    workoutExecutionThread.start();
+//                    workoutInProgress = true;
+//                    break;
+//
+//                case DialogInterface.BUTTON_NEGATIVE:
+//                    //No button clicked
+//                    Log.d(TAG, "No clicked, Don't resume anything");
+//                    /*workoutPaused = false;
+//                    workoutInProgress = false;
+//                    lastSegment = 0;
+//                    segmentTimeLeft = Integer.MAX_VALUE;
+//                    workout = null;*/
+//                    reset();
+//                    break;
+//            }
+//        }
+//    };
 
 
     private void increasePower(View view) {
@@ -397,6 +443,9 @@ public class Fragment_ManualPowerControl extends Fragment {
         boolean success = trainerController.setTargetPower(new BigDecimal(targetPowerVal));
         if (success == true)
             targetPower.setText("" + targetPowerVal);
+        else
+            Toast.makeText(getContext(), "Could not increase power !", Toast.LENGTH_LONG).show();
+
     }
 
     private void decreasePower(View view) {
@@ -406,6 +455,8 @@ public class Fragment_ManualPowerControl extends Fragment {
         boolean success = trainerController.setTargetPower(new BigDecimal(targetPowerVal));
         if (success == true)
             targetPower.setText("" + targetPowerVal);
+        else
+            Toast.makeText(getContext(), "Could not decrease power !", Toast.LENGTH_LONG).show();
     }
 
     private void loadWorkout(){
@@ -441,6 +492,8 @@ public class Fragment_ManualPowerControl extends Fragment {
             workoutExecutionThread = new WorkoutExecThread(this);
             workoutExecutionThread.start();
             workoutInProgress = true;
+            btnStartStopWorkout.setText("STOP");
+
         }
     }
 
@@ -506,6 +559,22 @@ public class Fragment_ManualPowerControl extends Fragment {
             //Toast.makeText(getContext(), "Skipping to Next Segment", Toast.LENGTH_SHORT).show();
             Log.d(TAG, "Next Segment !");
             workoutExecutionThread.nextSegment();
+        }
+        else {
+            Toast.makeText(getContext(), "No active workout ! ", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void prevSegment() {
+        if (workoutPaused == true) {
+            Toast.makeText(getContext(), "Resume workout to go back to prev Segment", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        if (workoutExecutionThread != null && workoutExecutionThread.isAlive() == true) {
+            //Toast.makeText(getContext(), "Skipping to Next Segment", Toast.LENGTH_SHORT).show();
+            Log.d(TAG, "Prev Segment !");
+            workoutExecutionThread.previousSegment();
         }
         else {
             Toast.makeText(getContext(), "No active workout ! ", Toast.LENGTH_SHORT).show();
