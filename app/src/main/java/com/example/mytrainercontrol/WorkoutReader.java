@@ -178,6 +178,9 @@ public class WorkoutReader {
             }
         }
 
+        // dummy segment to keep the thread alive, so we have a chance to go back if we want
+        workout.addSegment(3598, 100, "Done");
+
         return workout;
     }
 

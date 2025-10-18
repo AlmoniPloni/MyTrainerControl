@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.mytrainercontrol">
 
+    <!-- Your existing permissions (keep yours if you already have them) -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
+    <!-- Added for background reliability -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Required on API 28+ when using startForeground() -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:allowBackup="true"
@@ -13,16 +17,21 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <!--tools:replace="android:appComponentFactory">-->
-        <activity android:name=".MainActivity"
+
+        <!-- Your launcher Activity -->
+        <activity
+            android:name=".MainActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <!-- NEW: Keep-alive foreground service lives INSIDE <application> -->
+        <service
+            android:name=".KeepAliveService"
+            android:enabled="true"
+            android:exported="false" />
     </application>
-
 </manifest>

@@ -35,11 +35,21 @@ public class WorkoutExecThread extends Thread {
     boolean segmentCompleted;
     boolean skip_segment;
     boolean go_back;
+    boolean move_line;
     int startSegment;
     String segmentDescription;
     String nextSegmentDescription;
     int nextSegmentStart;
-    boolean isForward;
+    //boolean isForward;
+
+    // to avoid quick two taps
+    private long lastNavAtMs = 0;
+    private boolean navDebounce() {
+        long now = android.os.SystemClock.uptimeMillis();
+        if (now - lastNavAtMs < 300) return false; // 300ms guard
+        lastNavAtMs = now;
+        return true;
+    }
 
 
 
@@ -60,7 +70,7 @@ public class WorkoutExecThread extends Thread {
         segmentTimeLeft = fragmentFEC.segmentTimeLeft;
         nextSegmentStart = 0;
         go_back = false;
-        isForward = true;
+        //isForward = true;
 
     }
 
@@ -70,6 +80,10 @@ public class WorkoutExecThread extends Thread {
             mFragment.setLastSegment(i);
             lastTargetPower = mWorkout.getPower(i);
             segmentTimeLeft =  min(segmentTimeLeft, mWorkout.getDuration(i)+1);
+
+            if (i == mWorkout.getSize()-1)
+                showToast("Workout (well) DONE !");
+
 
             // Set moving linе to start from the beginning of segment
             final int ind = i;
@@ -99,7 +113,8 @@ public class WorkoutExecThread extends Thread {
             setTargetPower(i, lastTargetPower, true, segmentDescription);
             setNextSegment(i+1);
             while (segmentTimeLeft > 0) {
-                startTimer(segmentTimeLeft);
+                move_line= (i != mWorkout.getSize() - 1);
+                startTimer(segmentTimeLeft, move_line);
                 try {
                     Log.d(TAG, "Going to sleep for " + segmentTimeLeft + " seconds");
                     sleep(segmentDuration * 1000);
@@ -122,13 +137,24 @@ public class WorkoutExecThread extends Thread {
                     } else {
                         if (skip_segment == true) {
                             Log.d(TAG, "Skipping segment");
-                            segmentTimeLeft = Integer.MAX_VALUE;
+                            skip_segment = false;
+                            if (i == mWorkout.getSize()-1) {
+                                // do nothing
+                                Log.d(TAG, "Will park on the last segment and do nothing");
+                                showToast("Do nothing !");
+                                i = i-1; // should prevent from existing the outer loop !
+                                // don't update segmentTimeLeft, because we want to continue from the sama as before
+                            }
+                            else {
+                                segmentTimeLeft = Integer.MAX_VALUE;
+                            }
                             //showToast("Skipping current segment!");
-                            isForward = true;
+                            //isForward = true;
                             break;
                         }
                         else if (go_back == true){
                             Log.d(TAG, "Going back one segment: i = " + i);
+                            go_back = false;
                             if (i >= 1) {
                                 //segmentTimeLeft = mWorkout.getDuration(i - 1); // Reset segment time
                                 i = i - 2;  // No need for Math.max, since i >= 1
@@ -137,8 +163,8 @@ public class WorkoutExecThread extends Thread {
                                 //segmentTimeLeft = mWorkout.getDuration(0);
                                 i = -1; // So i++ makes it 0 again
                             }
-                            go_back = false;
-                            isForward = false;
+                            //isForward = false;
+                            segmentTimeLeft = Integer.MAX_VALUE;
                             break;
                             //continue;
 
@@ -153,7 +179,7 @@ public class WorkoutExecThread extends Thread {
                     }
                 }
             }
-            segmentTimeLeft = Integer.MAX_VALUE;
+            //segmentTimeLeft = Integer.MAX_VALUE;
             Log.d(TAG, "Segment finished");
             i++;
         }
@@ -165,7 +191,7 @@ public class WorkoutExecThread extends Thread {
         Thread.currentThread().interrupt();
     }
 
-    void startTimer(final int countDownSeconds) {
+    void startTimer(final int countDownSeconds, final boolean move_line) {
         Log.d(TAG, "Starting Timer for " + countDownSeconds + " sec." );
         final int countDownInterval = 1000;
         new Handler(Looper.getMainLooper()).post(new Runnable() {
@@ -191,7 +217,8 @@ public class WorkoutExecThread extends Thread {
                                     strToDisplay = String.format("%02d:%02d:%02d", hours, minutes, seconds);
                                 mFragment.setSegmentTimer(strToDisplay);
                                 mFragment.setSegmentTimeLeft(segmentTimeLeft);
-                                mFragment.setLine(-1);
+                                if (move_line)
+                                    mFragment.setLine(-1);
                             }
                         });
                     }
@@ -226,12 +253,18 @@ public class WorkoutExecThread extends Thread {
     }
 
     public  void nextSegment() {
+
+        if (!navDebounce()) return;
+
         skip_segment = true;
         cTimer.cancel();
         this.interrupt();
     }
 
     public void previousSegment() {
+
+        if (!navDebounce()) return;
+
         go_back = true;
         cTimer.cancel();
         this.interrupt();

@@ -260,6 +260,8 @@ public class Fragment_ManualPowerControl extends Fragment {
         trainerController = new TrainerController(getActivity(), getContext(), this);
         trainerController.resetPcc(false);
 
+        getActivity().startService(new Intent(getActivity(), KeepAliveService.class));
+
         //powerSensor = new PowerSensor(getActivity(), getContext(), actualPower, mActualPowerTitle);
         //powerSensor.resetPcc();
 
@@ -280,6 +282,9 @@ public class Fragment_ManualPowerControl extends Fragment {
         Log.d(TAG, "On Destroy");
 
         trainerController.onDestroy();
+
+        getActivity().stopService(new Intent(getActivity(), KeepAliveService.class));
+
         super.onDestroy();
     }
 
@@ -295,8 +300,9 @@ public class Fragment_ManualPowerControl extends Fragment {
                     setPowerCharData(workout);
                     openWokrout.setVisibility(View.INVISIBLE);
                     powerChart.setVisibility(View.VISIBLE);
+                    setLine(0);
                     powerChart.invalidate();
-                    Toast.makeText(getActivity(), csvFileURI.toString() , Toast.LENGTH_LONG).show();
+                    //Toast.makeText(getActivity(), csvFileURI.toString() , Toast.LENGTH_SHORT).show();
                 }
                 break;
 
@@ -716,7 +722,7 @@ public class Fragment_ManualPowerControl extends Fragment {
 
         ArrayList<BarEntry> values = new ArrayList<>();
 
-        for (int i = 0; i < workout.getSize(); i++) {
+        for (int i = 0; i < workout.getSize()-1; i++) {
             values.add(new BarEntry(i, workout.getPower(i)));
         }
         BarDataSet barPowerDataSet = new BarDataSet(values, "My Workout");
@@ -794,7 +800,7 @@ public class Fragment_ManualPowerControl extends Fragment {
     private List<ILineDataSet> generateLineData(Workout workout) {
         List<ILineDataSet> dataSets = new ArrayList<>();
         int currentTime = 0;
-        for (int i = 0; i < workout.getSize(); i++) {
+        for (int i = 0; i < workout.getSize()-1; i++) {
             List<Entry> barPoints = new ArrayList<>();
             Entry barPoint1;
             Entry barPoint2;
