@@ -110,7 +110,7 @@ public class WorkoutExecThread extends Thread {
                 }
             });
 
-            int segmentDuration = segmentTimeLeft;
+            //int segmentDuration = segmentTimeLeft;
             segmentDescription = mWorkout.getDescription(i);
             segmentCompleted = false;
             skip_segment = false;
@@ -125,6 +125,7 @@ public class WorkoutExecThread extends Thread {
                     segmentFinished = false;
                     sleep(segmentTimeLeft * 1000);
                     //segmentTimeLeft = Integer.MAX_VALUE;
+                    segmentTimeLeft = 0;
                     segmentFinished = true;
                 } catch (InterruptedException e) {
                     Log.d(TAG, "Workout Interrupted");
@@ -209,6 +210,11 @@ public class WorkoutExecThread extends Thread {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
+                // Cancel ANY previous timer that may still be running
+                if (cTimer != null) {
+                    cTimer.cancel();
+                }
+
                 cTimer = new CountDownTimer((countDownSeconds) * 1000, countDownInterval) {
                     //int currentTime = (countDownSeconds)*1000;
 
@@ -235,8 +241,9 @@ public class WorkoutExecThread extends Thread {
                         });
                     }
                     public void onFinish() {
-                        segmentTimeLeft = 0;        // <- add this
-                        updateTimer("00:00");
+                        //Log.d(TAG, "onFinish: resetting segmentTimeLeft=0 ");
+                        //segmentTimeLeft = 0;        // <- add this
+                        //updateTimer("00:00");
                     }
                 };
                 cTimer.start();
