@@ -30,6 +30,7 @@ public class WorkoutExecThread extends Thread {
     //TextView mSegmentTimer;
     //TextView mNextSegmentTimer;
     int segmentTimeLeft;
+    boolean segmentFinished;
     int lastTargetPower;
     boolean shouldPause;
     boolean segmentCompleted;
@@ -79,7 +80,11 @@ public class WorkoutExecThread extends Thread {
         workout_loop: while (i < mWorkout.getSize()) {
             mFragment.setLastSegment(i);
             lastTargetPower = mWorkout.getPower(i);
-            segmentTimeLeft =  min(segmentTimeLeft, mWorkout.getDuration(i)+1);
+            if (segmentFinished)
+                segmentTimeLeft = mWorkout.getDuration(i)+1;
+            else
+                // this branch when we resume previously unfinished workout workout (don't really happen often)
+                segmentTimeLeft =  min(segmentTimeLeft, mWorkout.getDuration(i)+1);
 
             if (i == mWorkout.getSize()-1)
                 showToast("Workout (well) DONE !");
@@ -117,7 +122,10 @@ public class WorkoutExecThread extends Thread {
                 startTimer(segmentTimeLeft, move_line);
                 try {
                     Log.d(TAG, "Going to sleep for " + segmentTimeLeft + " seconds");
-                    sleep(segmentDuration * 1000);
+                    segmentFinished = false;
+                    sleep(segmentTimeLeft * 1000);
+                    //segmentTimeLeft = Integer.MAX_VALUE;
+                    segmentFinished = true;
                 } catch (InterruptedException e) {
                     Log.d(TAG, "Workout Interrupted");
                     if (shouldPause == true) {
@@ -128,7 +136,9 @@ public class WorkoutExecThread extends Thread {
                                 wait();
                             }
                             Log.d(TAG, "Continue workout");
-                            setTargetPower(i, lastTargetPower, true, mWorkout.getDescription(i));
+                            if (segmentTimeLeft > 0)
+                                setTargetPower(i, lastTargetPower, true, mWorkout.getDescription(i));
+
                         } catch (InterruptedException e1) {
                             Log.d(TAG, "Wait Interrupted");
                             Log.d(TAG, "Stopping workout");
@@ -143,6 +153,7 @@ public class WorkoutExecThread extends Thread {
                                 Log.d(TAG, "Will park on the last segment and do nothing");
                                 showToast("Do nothing !");
                                 i = i-1; // should prevent from existing the outer loop !
+                                // segmentTimeLeft += 1;
                                 // don't update segmentTimeLeft, because we want to continue from the sama as before
                             }
                             else {
@@ -181,6 +192,7 @@ public class WorkoutExecThread extends Thread {
             }
             //segmentTimeLeft = Integer.MAX_VALUE;
             Log.d(TAG, "Segment finished");
+            segmentFinished = true;
             i++;
         }
 
@@ -222,8 +234,8 @@ public class WorkoutExecThread extends Thread {
                             }
                         });
                     }
-
                     public void onFinish() {
+                        segmentTimeLeft = 0;        // <- add this
                         updateTimer("00:00");
                     }
                 };

@@ -143,7 +143,7 @@ public class WorkoutReader {
 
                 try {
                     // Trim each field
-                    String durationStr = row[0].trim();
+                    String durationStr = row[0].replace("\uFEFF", "").trim();
                     String powerStr = row[2].trim();
                     String description = (row.length >= 4) ? row[3].trim() : "";
 
@@ -179,7 +179,7 @@ public class WorkoutReader {
         }
 
         // dummy segment to keep the thread alive, so we have a chance to go back if we want
-        workout.addSegment(3598, 100, "Done");
+        workout.addSegment(3599, 100, "Done");
 
         return workout;
     }

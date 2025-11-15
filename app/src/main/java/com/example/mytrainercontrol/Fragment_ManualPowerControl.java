@@ -34,7 +34,11 @@ import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
+import com.github.mikephil.charting.renderer.XAxisRenderer;
+import com.github.mikephil.charting.utils.Transformer;
+import com.github.mikephil.charting.utils.ViewPortHandler;
 import com.google.gson.Gson;
 
 import java.math.BigDecimal;
@@ -445,7 +449,7 @@ public class Fragment_ManualPowerControl extends Fragment {
 
 
     private void increasePower(View view) {
-        targetPowerVal = Integer.parseInt(targetPower.getText().toString()) + 10;
+        targetPowerVal = Integer.parseInt(targetPower.getText().toString()) + 5;
         boolean success = trainerController.setTargetPower(new BigDecimal(targetPowerVal));
         if (success == true)
             targetPower.setText("" + targetPowerVal);
@@ -455,7 +459,7 @@ public class Fragment_ManualPowerControl extends Fragment {
     }
 
     private void decreasePower(View view) {
-        targetPowerVal = Integer.parseInt(targetPower.getText().toString()) - 10;
+        targetPowerVal = Integer.parseInt(targetPower.getText().toString()) - 5;
         if (targetPowerVal < 0)
             targetPowerVal = 0;
         boolean success = trainerController.setTargetPower(new BigDecimal(targetPowerVal));
@@ -551,7 +555,7 @@ public class Fragment_ManualPowerControl extends Fragment {
             workoutPaused = false;
         }
         else {
-            Toast.makeText(getContext(), "No active workout to pause", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "No active workout to resume", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -717,13 +721,40 @@ public class Fragment_ManualPowerControl extends Fragment {
         }
 
     }
+    public class FixedStepXAxisRenderer extends XAxisRenderer {
+        private final float step;
+        public FixedStepXAxisRenderer(ViewPortHandler vph, XAxis axis, Transformer trans, float step) {
+            super(vph, axis, trans);
+            this.step = step;
+        }
 
+        @Override
+        protected void computeAxisValues(float min, float max) {
+            // Use axis range (not visible viewport) so ticks don't change on zoom
+            min = mAxis.getAxisMinimum();
+            max = mAxis.getAxisMaximum();
+
+            float start = (float)Math.ceil(min / step) * step;
+            int n = (int)Math.floor((max - start) / step) + 1;
+
+            if (n <= 0) {
+                mAxis.mEntries = new float[0];
+                mAxis.mEntryCount = 0;
+                return;
+            }
+            if (mAxis.mEntries.length < n) mAxis.mEntries = new float[n];
+            for (int i = 0; i < n; i++) mAxis.mEntries[i] = start + i * step;
+            mAxis.mEntryCount = n;
+        }
+    }
     private void setPowerCharData(Workout workout) {
 
         ArrayList<BarEntry> values = new ArrayList<>();
-
+        float cumDurationSecs = 0;
         for (int i = 0; i < workout.getSize()-1; i++) {
-            values.add(new BarEntry(i, workout.getPower(i)));
+            //values.add(new BarEntry(i, workout.getPower(i)));
+            values.add(new BarEntry(cumDurationSecs, workout.getPower(i)));
+            cumDurationSecs += workout.getDuration(i);
         }
         BarDataSet barPowerDataSet = new BarDataSet(values, "My Workout");
         barPowerDataSet.setDrawValues(false);
@@ -767,9 +798,49 @@ public class Fragment_ManualPowerControl extends Fragment {
         //xAxis.setLabelCount((int)Math.ceil(workout.getTotalDuraction()/600)+2, true);
 
         //YAxis.YAxisLabelPosition
+        float tickSecs = 5 * 60F ;
+        if (cumDurationSecs >= 90 * 60f)
+            tickSecs = 10 * 60f;
 
+//        xAxis.setAxisMinimum(0f);
+//        xAxis.setAxisMaximum(cumDurationMins);
+//        // don't force label count — let it pick 0..75 naturally
+//        xAxis.setGranularityEnabled(true);
+//        xAxis.setGranularity(tickMins);
+
+        float xMin = 0f;
+        float xMax = cumDurationSecs; // (float) (Math.ceil(cumDurationMins / tickSecs) * tickSecs);
+        xAxis.setAxisMinimum(xMin);
+        xAxis.setAxisMaximum(xMax);
+        //int labels = (int) ((xMax - xMin) / tickMins) + 1;
+
+        int labels = (int)Math.floor(cumDurationSecs / tickSecs); // + 1;
+        xAxis.setLabelCount(labels, true); // <- force exact # of labels (every 5 min)
         //xAxis.setGranularityEnabled(true);
-        //xAxis.setGranularity(600f);
+        //xAxis.setGranularity(tickMins);
+        powerChart.setXAxisRenderer(
+                new FixedStepXAxisRenderer(
+                        powerChart.getViewPortHandler(),
+                        xAxis,
+                        powerChart.getTransformer(YAxis.AxisDependency.LEFT),
+                        tickSecs
+                )
+        );
+        xAxis.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                // value is in SECONDS, so convert to minutes:
+                int totalSeconds = (int) value;
+                int minutes = totalSeconds / 60;
+                return String.valueOf(minutes);  // "0", "5", "10", etc.
+            }
+        });
+        // ✨ key part: lock the visible window to exactly the data span
+        float visible = cumDurationSecs - xMin; // 77.5
+        powerChart.setVisibleXRangeMinimum(visible);
+        powerChart.setVisibleXRangeMaximum(visible);
+        powerChart.moveViewToX(xMin); // show [0 .. 77.5]
+        powerChart.invalidate();
 
         xAxis.setDrawLabels(true);
         xAxis.setTextColor(Color.rgb(211,211,211));
@@ -785,7 +856,7 @@ public class Fragment_ManualPowerControl extends Fragment {
     public void setLine(int pos){
         if (pos ==- 1)
             if (powerChart.getXAxis().getLimitLines() != null)
-                pos = (int) powerChart.getXAxis().getLimitLines().get(0).getLimit() + 1;
+                pos = (int) powerChart.getXAxis().getLimitLines().get(0).getLimit() + 1 ;
             
         LimitLine ll = new LimitLine(pos);
         ll.setLineColor(Color.RED);
@@ -799,15 +870,16 @@ public class Fragment_ManualPowerControl extends Fragment {
 
     private List<ILineDataSet> generateLineData(Workout workout) {
         List<ILineDataSet> dataSets = new ArrayList<>();
-        int currentTime = 0;
+        float currentTime = 0;
         for (int i = 0; i < workout.getSize()-1; i++) {
             List<Entry> barPoints = new ArrayList<>();
             Entry barPoint1;
             Entry barPoint2;
             LineDataSet dataSet;
+            float duration = workout.getDuration(i);
             barPoint1 = new Entry(currentTime, workout.getPower(i));
-            barPoint2 = new Entry(currentTime + workout.getDuration(i), workout.getPower(i));
-            currentTime += workout.getDuration(i);
+            barPoint2 = new Entry(currentTime + duration, workout.getPower(i));
+            currentTime += duration;
             barPoints.add(barPoint1);
             barPoints.add(barPoint2);
             dataSet = new LineDataSet(barPoints, "");
