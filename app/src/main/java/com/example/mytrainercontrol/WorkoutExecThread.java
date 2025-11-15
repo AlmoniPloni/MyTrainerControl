@@ -132,13 +132,15 @@ public class WorkoutExecThread extends Thread {
                     if (shouldPause == true) {
                         try {
                             Log.d(TAG, "Pausing workout at Segment #" + i + " current power = " + lastTargetPower + " W left time " + segmentTimeLeft + " sec. to the end of current segment");
-                            setTargetPower(i, 100, false, "Easy Spin");
+                            setTargetPower(i, 100, false, "Paused");
                             synchronized (this) {
                                 wait();
                             }
                             Log.d(TAG, "Continue workout");
-                            if (segmentTimeLeft > 0)
+                            if (segmentTimeLeft > 0) {
+                                segmentTimeLeft += 1; // <-- start from full previous second
                                 setTargetPower(i, lastTargetPower, true, mWorkout.getDescription(i));
+                            }
 
                         } catch (InterruptedException e1) {
                             Log.d(TAG, "Wait Interrupted");
@@ -220,7 +222,7 @@ public class WorkoutExecThread extends Thread {
 
                     public void onTick(final long millisUntilFinished) {
                         segmentTimeLeft = (int) millisUntilFinished/1000;
-                        //Log.d(TAG, "onTick: " + millisUntilFinished + " millis until finished " + segmentTimeLeft + " sec. until finished" );
+                        Log.d(TAG, "onTick: " + millisUntilFinished + " millis until finished " + segmentTimeLeft + " sec. until finished" );
                         mActivity.runOnUiThread(new Runnable() {
                             String strToDisplay;
                             @Override

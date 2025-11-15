@@ -48,6 +48,11 @@ import java.util.List;
 import static android.app.Activity.RESULT_OK;
 import static java.lang.Thread.sleep;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
+
+
 public class Fragment_ManualPowerControl extends Fragment {
 
     private static final String TAG = "PowerControl FMPC";
@@ -115,6 +120,12 @@ public class Fragment_ManualPowerControl extends Fragment {
     //int lastTargetPower;
     int segmentTimeLeft;
     int lastSegment;
+
+    // --- Pause UI helper state ---
+    private Handler pauseHandler = new Handler(Looper.getMainLooper());
+    private boolean pauseUiRunning = false;
+    private long pauseStartRealtimeMs = 0L;
+
 
     DialogInterface.OnClickListener stopDialogClickListener = new DialogInterface.OnClickListener() { // from class: com.example.mytrainercontrol.Fragment_ManualPowerControl.7
         @Override // android.content.DialogInterface.OnClickListener
@@ -540,11 +551,38 @@ public class Fragment_ManualPowerControl extends Fragment {
             btnPauseWorkout.setText("Resume");
             workoutExecutionThread.pauseWorkout();
             workoutPaused = true;
+
+            // --- Show the paused segment in the "next segment" row ---
+            if (workout != null) {
+                int seg = lastSegment;
+                if (seg >= 0 && seg < workout.getSize()) {
+                    // Use the remaining time at pause moment
+                    int timeSeconds = segmentTimeLeft;
+                    int seconds = (int)((timeSeconds) % 60) ;
+                    int minutes = (int)((timeSeconds/60) % 60);
+                    int hours   = (int)((timeSeconds/(60*60)) % 24);
+                    String strToDisplay;
+                    if (hours == 0)
+                        strToDisplay = String.format("%02d:%02d", minutes, seconds);
+                    else
+                        strToDisplay = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+
+                    //setNextSegmentDescription(workout.getDescription(seg));
+                    setNextSegmentDescription("On Hold");
+                    // setSegmentDescription("Paused"); <-- will be set in WorkoutExecThread
+                    setNextTargetPower("" + workout.getPower(seg));
+                    setNextSegmentTimer(strToDisplay);
+                }
+            }
+
+            // --- Start showing "time since pause" in the current segment timer ---
+            startPauseUiTimer();
         }
         else {
             Toast.makeText(getContext(), "No active workout to pause", Toast.LENGTH_SHORT).show();
         }
     }
+
 
     private void resumeWorkout() {
         if (workoutExecutionThread != null && workoutExecutionThread.isAlive() == true) {
@@ -553,11 +591,41 @@ public class Fragment_ManualPowerControl extends Fragment {
             btnPauseWorkout.setText("Pause");
             workoutExecutionThread.resumeWorkout();
             workoutPaused = false;
+
+            // --- Stop the pause UI timer, segmentTimer will be driven again by WorkoutExecThread ---
+            stopPauseUiTimer();
+
+            // --- Restore proper "next segment" info (real upcoming segment) ---
+            if (workout != null) {
+                int seg = lastSegment + 1;
+                if (seg >= 0 && seg < workout.getSize()) {
+                    int timeSeconds = workout.getDuration(seg);
+                    int seconds = (int)((timeSeconds) % 60) ;
+                    int minutes = (int)((timeSeconds/60) % 60);
+                    int hours   = (int)((timeSeconds/(60*60)) % 24);
+                    String strToDisplay;
+                    if (hours == 0)
+                        strToDisplay = String.format("%02d:%02d", minutes, seconds);
+                    else
+                        strToDisplay = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+
+                    setNextSegmentDescription(workout.getDescription(seg));
+                    //setSegmentDescription(workout.getDescription(lastSegment)); // <-- will be set in WorkoutExecThread
+                    setNextTargetPower("" + workout.getPower(seg));
+                    setNextSegmentTimer(strToDisplay);
+                } else {
+                    // no upcoming segment -> show Easy Spin as before
+                    setNextSegmentDescription("Easy Spin");
+                    setNextTargetPower("100");
+                    setNextSegmentTimer("00:00");
+                }
+            }
         }
         else {
             Toast.makeText(getContext(), "No active workout to resume", Toast.LENGTH_SHORT).show();
         }
     }
+
 
     private void nextSegment() {
         if (workoutPaused == true) {
@@ -619,6 +687,9 @@ public class Fragment_ManualPowerControl extends Fragment {
         segmentTimeLeft = Integer.MAX_VALUE;
         lastSegment = 0;
         workout = null;
+
+        // stop any pause timer if running
+        stopPauseUiTimer();
     }
 
     public void setNextSegmentDescription(String description){
@@ -894,5 +965,40 @@ public class Fragment_ManualPowerControl extends Fragment {
     }
         return dataSets;
     }
+
+    private final Runnable pauseTickRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!pauseUiRunning) return;
+
+            long elapsedSec = (SystemClock.elapsedRealtime() - pauseStartRealtimeMs) / 1000;
+            int seconds = (int)(elapsedSec % 60);
+            int minutes = (int)((elapsedSec / 60) % 60);
+            int hours   = (int)((elapsedSec / 3600) % 24);
+
+            String strToDisplay;
+            if (hours == 0)
+                strToDisplay = String.format("%02d:%02d", minutes, seconds);
+            else
+                strToDisplay = String.format("%02d:%02d:%02d", hours, minutes, seconds);
+
+            segmentTimer.setText(strToDisplay);
+
+            // schedule next tick
+            pauseHandler.postDelayed(this, 1000);
+        }
+    };
+
+    private void startPauseUiTimer() {
+        pauseUiRunning = true;
+        pauseStartRealtimeMs = SystemClock.elapsedRealtime();
+        pauseHandler.post(pauseTickRunnable);
+    }
+
+    private void stopPauseUiTimer() {
+        pauseUiRunning = false;
+        pauseHandler.removeCallbacks(pauseTickRunnable);
+    }
+
 
 }
