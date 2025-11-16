@@ -117,6 +117,10 @@ public class Fragment_ManualPowerControl extends Fragment {
     WorkoutExecThread workoutExecutionThread;
     boolean workoutPaused;
     boolean workoutInProgress;
+
+    // NEW:
+    private boolean autoPausedByDisconnect = false;
+
     //int lastTargetPower;
     int segmentTimeLeft;
     int lastSegment;
@@ -125,6 +129,10 @@ public class Fragment_ManualPowerControl extends Fragment {
     private Handler pauseHandler = new Handler(Looper.getMainLooper());
     private boolean pauseUiRunning = false;
     private long pauseStartRealtimeMs = 0L;
+
+    // Workout timer continuity across reconnects
+    private float workoutTimeOffset = 0f;
+    private float lastReportedWorkoutTime = 0f;
 
 
     DialogInterface.OnClickListener stopDialogClickListener = new DialogInterface.OnClickListener() { // from class: com.example.mytrainercontrol.Fragment_ManualPowerControl.7
@@ -360,6 +368,7 @@ public class Fragment_ManualPowerControl extends Fragment {
         workoutInProgress = sp.getBoolean(WORKOUT_IN_PROGRESS, false);
         Log.d(TAG, "Restored workoutInProgress: " + workoutInProgress);
 
+        workoutInProgress = false; // # <-- always start from scratch (never used mid-workout) !
         if (workoutInProgress == true) {
 
             workoutPaused = sp.getBoolean(WORKOUT_PAUSED, false);
@@ -510,6 +519,12 @@ public class Fragment_ManualPowerControl extends Fragment {
 
         else {
             Toast.makeText(getContext(), "Starting workout execution thread", Toast.LENGTH_SHORT).show();
+
+            // ensure timer continuity state is clean for a fresh workout
+            workoutTimeOffset = 0f;
+            lastReportedWorkoutTime = 0f;
+            //setWorkoutTimer(0f);
+
             workoutExecutionThread = new WorkoutExecThread(this);
             workoutExecutionThread.start();
             workoutInProgress = true;
@@ -585,7 +600,11 @@ public class Fragment_ManualPowerControl extends Fragment {
 
 
     private void resumeWorkout() {
-        if (workoutExecutionThread != null && workoutExecutionThread.isAlive() == true) {
+        if (workoutExecutionThread != null && workoutExecutionThread.isAlive() == true && autoPausedByDisconnect == true)
+        {
+            Toast.makeText(getContext(), "Need to be connected to the trainer before resuming workout", Toast.LENGTH_SHORT).show();
+        }
+        else if (workoutExecutionThread != null && workoutExecutionThread.isAlive() == true) {
             Toast.makeText(getContext(), "Resuming workout", Toast.LENGTH_SHORT).show();
             Log.d(TAG, "Resuming Workout Execution Thread Now !");
             btnPauseWorkout.setText("Pause");
@@ -690,6 +709,11 @@ public class Fragment_ManualPowerControl extends Fragment {
 
         // stop any pause timer if running
         stopPauseUiTimer();
+
+        // also reset workout timer continuity state
+        workoutTimeOffset = 0f;
+        lastReportedWorkoutTime = 0f;
+        mWorkoutTime.setText("00:00:00");
     }
 
     public void setNextSegmentDescription(String description){
@@ -768,9 +792,19 @@ public class Fragment_ManualPowerControl extends Fragment {
 
 
     public void setWorkoutTimer(float timeSeconds){
-        int seconds = (int)((timeSeconds) % 60) ;
-        int minutes = (int)((timeSeconds/60) % 60);
-        int hours   = (int)((timeSeconds/(60*60)) % 24);
+        // Detect trainer time reset (e.g. after a brief disconnect/reconnect)
+        if (workoutInProgress && timeSeconds < lastReportedWorkoutTime) {
+            // Trainer's internal timer restarted from 0; keep continuity in UI
+            workoutTimeOffset += lastReportedWorkoutTime;
+        }
+
+        lastReportedWorkoutTime = timeSeconds;
+
+        float displayTime = timeSeconds + workoutTimeOffset;
+
+        int seconds = (int)(displayTime % 60);
+        int minutes = (int)((displayTime / 60) % 60);
+        int hours   = (int)((displayTime / (60*60)) % 24);
         mWorkoutTime.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
     }
 
@@ -999,6 +1033,33 @@ public class Fragment_ManualPowerControl extends Fragment {
         pauseUiRunning = false;
         pauseHandler.removeCallbacks(pauseTickRunnable);
     }
+
+    public void autoPauseFromTrainerDisconnect() {
+        // Only auto-pause if a workout is running and not already paused
+        if (workoutInProgress && !workoutPaused && workoutExecutionThread != null &&
+                workoutExecutionThread.isAlive()) {
+
+            Log.d(Fragment_ManualPowerControl.TAG, "autoPauseFromTrainerDisconnect: setting autoPausedByDisconnect = true and pausing workout");
+
+            autoPausedByDisconnect = true;
+            // reuse your normal pause logic
+            pauseWorkout();
+        }
+    }
+
+    public void autoResumeFromTrainerReconnect() {
+        // Only auto-resume if we auto-paused (don’t override manual pauses)
+        if (workoutInProgress && workoutPaused && autoPausedByDisconnect &&
+                workoutExecutionThread != null && workoutExecutionThread.isAlive()) {
+
+            Log.d(Fragment_ManualPowerControl.TAG, "autoResumeFromTrainerReconnect: setting autoPausedByDisconnect = false and resuming workout");
+
+            autoPausedByDisconnect = false;
+            // reuse your normal resume logic
+            resumeWorkout();
+        }
+    }
+
 
 
 }

@@ -222,7 +222,7 @@ public class WorkoutExecThread extends Thread {
 
                     public void onTick(final long millisUntilFinished) {
                         segmentTimeLeft = (int) millisUntilFinished/1000;
-                        Log.d(TAG, "onTick: " + millisUntilFinished + " millis until finished " + segmentTimeLeft + " sec. until finished" );
+                        //Log.d(TAG, "onTick: " + millisUntilFinished + " millis until finished " + segmentTimeLeft + " sec. until finished" );
                         mActivity.runOnUiThread(new Runnable() {
                             String strToDisplay;
                             @Override

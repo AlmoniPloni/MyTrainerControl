@@ -320,29 +320,74 @@ public class TrainerController {
                         mActivity.runOnUiThread(new Runnable()
                         {
                             @Override
-                            public void run()
-                            {
+                            public void run() {
                                 if (newDeviceState == DeviceState.DEAD) {
+                                    mFragment.autoPauseFromTrainerDisconnect();
                                     resetPcc(false);
+                                }
+                                if (newDeviceState == DeviceState.SEARCHING) {
+
+                                    mFragment.autoPauseFromTrainerDisconnect();
+
+                                    // ⚠️ Warning state (yellow)
+                                    int warn = Color.YELLOW;
+                                    int normal = Color.GRAY;
+
+                                    mFragment.setActualPowerColor(normal);
+                                    mFragment.setActualPowerTitleColor(warn);
+                                    mFragment.setSpeedTitleColor(warn);
+                                    mFragment.setSpeedTextColor(normal);
+                                    mFragment.setSpeed("999");
+                                    mFragment.setTotalDistanceColor(normal);
+                                    mFragment.setTotalDistanceTitleColor(warn);
+                                    mFragment.setWorkoutTimerColor(normal);
+                                    mFragment.setWorkoutTimerTitleColor(warn);
+                                    mFragment.setCadenceColor(normal);
+                                    mFragment.setCadenceTitleColor(warn);
+
+                                } else if (newDeviceState == DeviceState.DEAD ||
+                                        newDeviceState == DeviceState.CLOSED ||
+                                        newDeviceState == DeviceState.UNRECOGNIZED) {
+
+                                    mFragment.autoPauseFromTrainerDisconnect();
+
+                                    // ❌ Error state (red)
+                                    int error = Color.RED;
+                                    int normal = Color.GRAY;
+
+                                    mFragment.setActualPowerColor(normal);
+                                    mFragment.setActualPowerTitleColor(error);
+                                    mFragment.setSpeedTitleColor(error);
+                                    mFragment.setSpeedTextColor(normal);
+                                    mFragment.setSpeed("999");
+                                    mFragment.setTotalDistanceColor(normal);
+                                    mFragment.setTotalDistanceTitleColor(error);
+                                    mFragment.setWorkoutTimerColor(normal);
+                                    mFragment.setWorkoutTimerTitleColor(error);
+                                    mFragment.setCadenceColor(normal);
+                                    mFragment.setCadenceTitleColor(error);
+                                } else if (newDeviceState == DeviceState.TRACKING) {
+
+                                    // ✅ Good state (green)
+                                    int ok = Color.GREEN;
+                                    int normal = Color.WHITE;
+
+                                    mFragment.setActualPowerColor(normal);
+                                    mFragment.setActualPowerTitleColor(ok);
+                                    mFragment.setSpeedTitleColor(ok);
+                                    mFragment.setSpeedTextColor(normal);
+                                    //mFragment.setSpeed("000");
+                                    mFragment.setTotalDistanceColor(normal);
+                                    mFragment.setTotalDistanceTitleColor(ok);
+                                    mFragment.setWorkoutTimerColor(normal);
+                                    mFragment.setWorkoutTimerTitleColor(ok);
+                                    mFragment.setCadenceColor(normal);
+                                    mFragment.setCadenceTitleColor(ok);
+
+                                    mFragment.autoResumeFromTrainerReconnect();
 
                                 }
-                                if (newDeviceState == DeviceState.DEAD ||
-                                    newDeviceState == DeviceState.CLOSED ||
-                                    newDeviceState == DeviceState.SEARCHING ||
-                                    newDeviceState == DeviceState.UNRECOGNIZED)
-                                {
-                                    mFragment.setActualPowerColor(Color.GRAY);
-                                    mFragment.setActualPowerTitleColor(Color.RED);
-                                    mFragment.setSpeedTitleColor(Color.RED);
-                                    mFragment.setSpeedTextColor(Color.GRAY);
-                                    mFragment.setSpeed("999");
-                                    mFragment.setTotalDistanceColor(Color.GRAY);
-                                    mFragment.setTotalDistanceTitleColor(Color.RED);
-                                    mFragment.setWorkoutTimerColor(Color.GRAY);
-                                    mFragment.setWorkoutTimerTitleColor(Color.RED);
-                                    mFragment.setCadenceColor(Color.GRAY);
-                                    mFragment.setCadenceTitleColor(Color.RED);
-                                }
+
 
                                 //Note: The state here is the state of our data receiver channel which is closed until the ANTFS session is established
                                 //if(newDeviceState == DeviceState.CLOSED)
