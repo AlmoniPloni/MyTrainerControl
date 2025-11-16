@@ -7,6 +7,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -46,6 +48,10 @@ public class TrainerController {
     FitFileCommon.FitFile[] files;
     Settings settings;
     BigDecimal speedConvert;
+
+    private boolean autoReconnectEnabled = true;
+    private int reconnectAttempt = 0;
+    private final Handler reconnectHandler = new Handler(Looper.getMainLooper());
 
 
     public TrainerController(Activity activity, Context context, Fragment_ManualPowerControl fragment){
@@ -139,6 +145,9 @@ public class TrainerController {
                             case SUCCESS:
                                 fePcc = result;
                                 Toast.makeText(mContext, "Access Successful to Device ID: " + String.valueOf(fePcc.getAntDeviceNumber()), Toast.LENGTH_SHORT).show();
+
+                                clearReconnectState();  // ⬅️ reset retry state on success
+
                                 //if (initialDeviceState == DeviceState.TRACKING) {
                                 mFragment.setActualPowerColor(Color.WHITE);
                                 mFragment.setActualPowerTitleColor(Color.GREEN);
@@ -175,9 +184,11 @@ public class TrainerController {
                                 break;
                             case CHANNEL_NOT_AVAILABLE:
                                 Toast.makeText(mContext, "Channel Not Available", Toast.LENGTH_SHORT).show();
+                                scheduleAutoReconnect(false);   // ⬅️ retry without resetting workout
                                 break;
                             case ADAPTER_NOT_DETECTED:
                                 Toast.makeText(mContext, "ANT Adapter Not Available. Built-in ANT hardware or external adapter required.", Toast.LENGTH_SHORT).show();
+                                // usually no auto-reconnect here; user must fix hardware
                                 break;
                             case BAD_PARAMS:
                                 //Note: Since we compose all the params ourself, we should never see this result
@@ -185,6 +196,7 @@ public class TrainerController {
                                 break;
                             case OTHER_FAILURE:
                                 Toast.makeText(mContext, "RequestAccess failed. See logcat for details.", Toast.LENGTH_SHORT).show();
+                                scheduleAutoReconnect(false);   // ⬅️ try again
                                 break;
                             case DEPENDENCY_NOT_INSTALLED:
                                 Toast.makeText(mContext, "Dependency not installed", Toast.LENGTH_SHORT).show();
@@ -218,6 +230,9 @@ public class TrainerController {
                                 break;
                             case USER_CANCELLED:
                                 Toast.makeText(mContext, "Cancelled", Toast.LENGTH_SHORT).show();
+
+                                scheduleAutoReconnect(false);   // ⬅️ try again, maybe cancelled by mistake ?
+
                                 break;
                             case UNRECOGNIZED:
                                 Toast.makeText(mContext, "Failed: UNRECOGNIZED. PluginLib Upgrade Required?", Toast.LENGTH_SHORT).show();
@@ -1122,5 +1137,48 @@ public class TrainerController {
             releaseHandle = null;
         }
     }
+
+    private void scheduleAutoReconnect(final boolean includeWorkout) {
+        if (!autoReconnectEnabled)
+            return;
+
+        reconnectAttempt++;
+
+        long delayMs = Math.min(30000L, 2000L * reconnectAttempt);
+        long delaySec = delayMs / 1000;
+
+        // BEFORE waiting
+        Log.d("TrainerController",
+                "Auto-reconnect scheduled: attempt " + reconnectAttempt +
+                        " in " + delaySec + " seconds");
+
+        Toast.makeText(mContext,
+                "Trainer disconnected — retrying (" + reconnectAttempt + ") in " +
+                        delaySec + "s…",
+                Toast.LENGTH_SHORT).show();
+
+        reconnectHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+
+                // WHEN retries actually start
+                Log.d("TrainerController",
+                        "Auto-reconnect attempt " + reconnectAttempt + " — retrying now");
+
+                Toast.makeText(mContext,
+                        "Reconnecting now (attempt " + reconnectAttempt + ")…",
+                        Toast.LENGTH_SHORT).show();
+
+                resetPcc(includeWorkout);
+            }
+        }, delayMs);
+    }
+
+    private void clearReconnectState() {
+        Log.d("TrainerController", "Auto-reconnect state cleared");
+        reconnectAttempt = 0;
+        reconnectHandler.removeCallbacksAndMessages(null);
+    }
+
 
 }
